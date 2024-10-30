@@ -155,7 +155,7 @@ function DailyRecordPage() {
     <div style={styles.container}>
       <header style={styles.header}>
         <button onClick={() => navigate(-1)} style={styles.backButton}>
-          🔙
+          ⏎
         </button>
         <h2 style={styles.title}>캘린더</h2>
       </header>
