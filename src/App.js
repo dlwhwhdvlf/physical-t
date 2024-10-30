@@ -5,6 +5,7 @@ import "react-calendar/dist/Calendar.css";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, LineChart, Line } from "recharts";
 import './Calendar.css';
 import { useCookies } from "react-cookie";
+import { useNavigate } from "react-router-dom";
 
 // 7일간의 푸시업 예시 데이터
 const data7Days = [
@@ -122,6 +123,7 @@ function DailyRecordPage() {
   const [cookies] = useCookies(['access_token']);
   const [tokenMessage, setTokenMessage] = useState("");
   const [date, setDate] = useState(new Date());
+  const navigate = useNavigate(); // 뒤로가기
 
   const handleShowToken = () => {
     const accessToken = cookies.access_token;
@@ -151,6 +153,9 @@ function DailyRecordPage() {
   return (
     <div style={styles.container}>
       <header style={styles.header}>
+        <button onClick={() => navigate(-1)} style={styles.backButton}>
+          뒤로가기
+        </button>
         <h2 style={styles.title}>캘린더</h2>
       </header>
 
