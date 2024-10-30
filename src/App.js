@@ -4,7 +4,7 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, LineChart, Line } from "recharts";
 import './Calendar.css';
-
+import { useCookies } from "react-cookie";
 
 // 7일간의 푸시업 예시 데이터
 const data7Days = [
@@ -36,8 +36,89 @@ const paceData = [
   { 구간: "2분", 속도: 6 },
 ];
 
-// 메인 페이지 컴포넌트
 function MainPage() {
+  const [cookies] = useCookies(['access_token']);
+  const [tokenMessage, setTokenMessage] = useState("");
+
+  // 버튼 클릭 시 쿠키의 access token을 가져오는 함수
+  const handleShowToken = () => {
+    const accessToken = cookies.access_token;
+    setTokenMessage(accessToken ? `Access Token: ${accessToken}` : "토큰이 설정되지 않았습니다.");
+  };
+
+  const renderBarChart = () => (
+    <ResponsiveContainer width="100%" height={250}>
+      <BarChart data={data7Days}>
+        <CartesianGrid vertical={false} stroke="#444" />
+        <XAxis dataKey="date" stroke="#888" />
+        <YAxis
+          domain={[40, 80]}  // 고정된 Y축 범위 설정
+          ticks={[pushupLevels[0].value, pushupLevels[1].value, pushupLevels[2].value, pushupLevels[3].value]}
+          tick={false}  // 회색 눈금 제거
+          stroke="#888"
+        />
+        <Tooltip formatter={(value) => (value === null ? "운동 안 함" : value)} />
+        {pushupLevels.map((line, index) => (
+          <ReferenceLine
+            key={index}
+            y={line.value}
+            label={{ position: "left", value: line.label, fill: line.color }}
+            stroke={line.color}
+            strokeDasharray="3 3"
+          />
+        ))}
+        <Bar dataKey="횟수" fill="#3498db" radius={[10, 10, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+
+  const renderLineChart = () => (
+    <ResponsiveContainer width="100%" height={200}>
+      <LineChart data={paceData}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="구간" />
+        <YAxis domain={[0, 20]} />
+        <Tooltip />
+        <Line type="monotone" dataKey="속도" stroke="#82ca9d" dot={false} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+
+  return (
+    <div style={styles.container}>
+      <header style={styles.header}>
+        <h2 style={styles.title}>통계</h2>
+      </header>
+
+      <div style={styles.content}>
+        <div style={styles.chartSection}>
+          <h3 style={styles.sectionTitle}>최근 7일 운동</h3>
+          <span style={styles.dateRange}>08.06 - 08.12</span>
+          <div style={styles.chartContainer}>{renderBarChart()}</div>
+        </div>
+
+        <div style={styles.chartSection}>
+          <h3 style={styles.sectionTitle}>페이스</h3>
+          <span style={styles.description}>구간 별로 회원님의 운동 속도를 측정했어요</span>
+          <div style={styles.chartContainer}>{renderLineChart()}</div>
+        </div>
+
+        <div style={styles.buttonSection}>
+          <Link to="/daily-record" style={styles.button}>날짜별 운동 기록 보기</Link>
+        </div>
+      </div>
+
+      {/* 우측 하단 버튼 */}
+      <button onClick={handleShowToken} style={styles.saveTokenButton}>
+        토큰 보기
+      </button>
+      {tokenMessage && <p style={styles.tokenMessage}>{tokenMessage}</p>}
+    </div>
+  );
+}
+
+// 메인 페이지 컴포넌트
+/*function MainPage() {
   const renderBarChart = () => (
     <ResponsiveContainer width="100%" height={250}>
       <BarChart data={data7Days}>
@@ -101,7 +182,7 @@ function MainPage() {
       </div>
     </div>
   );
-}
+}*/
 
 // 날짜별 운동 기록 페이지 컴포넌트
 function DailyRecordPage() {
@@ -267,6 +348,26 @@ const styles = {
     display: "flex",
     justifyContent: "space-around",
     fontSize: "1.2em",
+  },
+  saveTokenButton: {
+    position: "fixed",
+    right: "20px",
+    bottom: "20px",
+    padding: "10px 20px",
+    backgroundColor: "#3498db",
+    color: "#fff",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+  },
+  tokenMessage: {
+    position: "fixed",
+    right: "20px",
+    bottom: "60px",
+    color: "#fff",
+    backgroundColor: "#444",
+    padding: "5px 10px",
+    borderRadius: "5px",
   },
 
 };
