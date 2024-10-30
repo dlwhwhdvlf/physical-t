@@ -28,13 +28,13 @@ const pushupLevels = [
 
 // 페이스 데이터 예시 (구간별 속도)
 const paceData = [
-  { 구간: "0초", 속도: 0 },
-  { 구간: "20초", 속도: 15 },
-  { 구간: "40초", 속도: 13 },
-  { 구간: "1분", 속도: 12 },
-  { 구간: "1분 20초", 속도: 10 },
-  { 구간: "1분 40초", 속도: 9 },
-  { 구간: "2분", 속도: 6 },
+  { 구간: "0s", 속도: 0 },
+  { 구간: "20s", 속도: 15 },
+  { 구간: "40s", 속도: 13 },
+  { 구간: "60s", 속도: 12 },
+  { 구간: "80s", 속도: 10 },
+  { 구간: "100s", 속도: 9 },
+  { 구간: "120s", 속도: 6 },
 ];
 
 function MainPage() {
@@ -51,7 +51,7 @@ function MainPage() {
     <ResponsiveContainer width="100%" height={250}>
       <BarChart data={data7Days}>
         <CartesianGrid vertical={false} stroke="#444" />
-        <XAxis dataKey="date" stroke="#888" />
+        <XAxis dataKey="date" stroke="#888" tick={{ fontSize: 10 }} />
         <YAxis
           domain={[40, 80]}  // 고정된 Y축 범위 설정
           ticks={[pushupLevels[0].value, pushupLevels[1].value, pushupLevels[2].value, pushupLevels[3].value]}
@@ -77,7 +77,7 @@ function MainPage() {
     <ResponsiveContainer width="100%" height={200}>
       <LineChart data={paceData}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="구간" />
+        <XAxis dataKey="구간" interval={0} tick={{ fontSize: 10 }} /> {/* 글자 크기 조정 */}
         <YAxis domain={[0, 20]} />
         <Tooltip />
         <Line type="monotone" dataKey="속도" stroke="#82ca9d" dot={false} />
@@ -142,13 +142,14 @@ function DailyRecordPage() {
     <ResponsiveContainer width="100%" height={200}>
       <LineChart data={paceData}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="구간" />
+        <XAxis dataKey="구간" interval={0} tick={{ fontSize: 10 }} /> {/* 글자 크기 조정 */}
         <YAxis domain={[0, 20]} />
         <Tooltip />
         <Line type="monotone" dataKey="속도" stroke="#82ca9d" dot={false} />
       </LineChart>
     </ResponsiveContainer>
   );
+
 
   return (
     <div style={styles.container}>
