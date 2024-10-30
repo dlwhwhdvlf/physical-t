@@ -117,94 +117,25 @@ function MainPage() {
   );
 }
 
-// 메인 페이지 컴포넌트
-/*function MainPage() {
-  const renderBarChart = () => (
-    <ResponsiveContainer width="100%" height={250}>
-      <BarChart data={data7Days}>
-        <CartesianGrid vertical={false} stroke="#444" />
-        <XAxis dataKey="date" stroke="#888" />
-        <YAxis
-          domain={[40, 80]}  // 고정된 Y축 범위 설정
-          ticks={[pushupLevels[0].value, pushupLevels[1].value, pushupLevels[2].value, pushupLevels[3].value]}
-          tick={false}  // 회색 눈금 제거
-          stroke="#888"
-        />
-        <Tooltip formatter={(value) => (value === null ? "운동 안 함" : value)} />
-        {pushupLevels.map((line, index) => (
-          <ReferenceLine
-            key={index}
-            y={line.value}
-            label={{ position: "left", value: line.label, fill: line.color }}
-            stroke={line.color}
-            strokeDasharray="3 3"
-          />
-        ))}
-        <Bar dataKey="횟수" fill="#3498db" radius={[10, 10, 0, 0]} />
-      </BarChart>
-    </ResponsiveContainer>
-  );
-
-  const renderLineChart = () => (
-    <ResponsiveContainer width="100%" height={200}>
-      <LineChart data={paceData}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="구간" />
-        <YAxis domain={[0, 20]} />
-        <Tooltip />
-        <Line type="monotone" dataKey="속도" stroke="#82ca9d" dot={false} />
-      </LineChart>
-    </ResponsiveContainer>
-  );
-
-  return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <h2 style={styles.title}>통계</h2>
-      </header>
-
-      <div style={styles.content}>
-        <div style={styles.chartSection}>
-          <h3 style={styles.sectionTitle}>최근 7일 운동</h3>
-          <span style={styles.dateRange}>08.06 - 08.12</span>
-          <div style={styles.chartContainer}>{renderBarChart()}</div>
-        </div>
-
-        <div style={styles.chartSection}>
-          <h3 style={styles.sectionTitle}>페이스</h3>
-          <span style={styles.description}>구간 별로 회원님의 운동 속도를 측정했어요</span>
-          <div style={styles.chartContainer}>{renderLineChart()}</div>
-        </div>
-
-        <div style={styles.buttonSection}>
-          <Link to="/daily-record" style={styles.button}>날짜별 운동 기록 보기</Link>
-        </div>
-      </div>
-    </div>
-  );
-}*/
-
 // 날짜별 운동 기록 페이지 컴포넌트
 function DailyRecordPage() {
+  const [cookies] = useCookies(['access_token']);
+  const [tokenMessage, setTokenMessage] = useState("");
   const [date, setDate] = useState(new Date());
 
-  // 해당 월이 아닌 날짜 타일을 숨기기 위한 함수
+  const handleShowToken = () => {
+    const accessToken = cookies.access_token;
+    setTokenMessage(accessToken ? `Access Token: ${accessToken}` : "토큰이 설정되지 않았습니다.");
+  };
+
   const tileDisabled = ({ date, view }) => {
     if (view === "month") {
-      // 현재 달력에 표시된 월
       const currentMonth = new Date().getMonth();
-      // 해당 타일의 월이 현재 월과 다른 경우 비활성화
       return date.getMonth() !== currentMonth;
     }
     return false;
   };
 
-
-
-  const onDateChange = (newDate) => {
-    setDate(newDate);
-  };
-
   const renderLineChart = () => (
     <ResponsiveContainer width="100%" height={200}>
       <LineChart data={paceData}>
@@ -218,7 +149,6 @@ function DailyRecordPage() {
   );
 
   return (
-
     <div style={styles.container}>
       <header style={styles.header}>
         <h2 style={styles.title}>캘린더</h2>
@@ -230,11 +160,9 @@ function DailyRecordPage() {
             onChange={setDate}
             value={date}
             tileDisabled={tileDisabled}
-            showNeighboringMonth={false} // 해당 월 이외의 날짜 표시 숨기기
+            showNeighboringMonth={false}
           />
         </div>
-        {/* 다른 컴포넌트 */}
-
 
         <div style={styles.recordSection}>
           <h3 style={styles.sectionTitle}>1 등급 입니다 🎉</h3>
@@ -250,8 +178,14 @@ function DailyRecordPage() {
           <span style={styles.description}>구간 별로 회원님의 운동 속도를 측정했어요</span>
           <div style={styles.chartContainer}>{renderLineChart()}</div>
         </div>
-      </div >
-    </div >
+      </div>
+
+      {/* 우측 하단 버튼 */}
+      <button onClick={handleShowToken} style={styles.saveTokenButton}>
+        토큰 보기
+      </button>
+      {tokenMessage && <p style={styles.tokenMessage}>{tokenMessage}</p>}
+    </div>
   );
 }
 
