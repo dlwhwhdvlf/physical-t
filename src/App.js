@@ -49,7 +49,7 @@ function MainPage() {
   useEffect(() => {
     const fetchStatistics = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/statistics/weekly-stats/me`, {
+        const response = await axios.get(`${BASE_URL}/api/user/test3`, {
           headers: {
             Authorization: `Bearer ${TEST_TOKEN}`,
           },
