@@ -7,6 +7,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "express": "^4.21.1",
+    "mysql": "^2.18.1",
     "react": "^18.3.1",
     "react-calendar": "^5.1.0",
     "react-cookie": "^7.2.2",
@@ -40,8 +41,12 @@
       "last 1 safari version"
     ]
   },
+  "proxy": "http://3.36.72.104:8080",
   "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
   "main": "index.js",
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "axios": "^1.7.7"
+  }
 }

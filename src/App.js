@@ -1,11 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { BrowserRouter as Router, Route, Link, Routes } from "react-router-dom";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, LineChart, Line } from "recharts";
 import './Calendar.css';
 import { useCookies } from "react-cookie";
-import { useNavigate } from "react-router-dom";
+
+const BASE_URL = "http://3.36.72.104:8080";
+const TEST_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkZXZpY2VJZCI6ImRldmljZTEyMzQ1Njc4OSIsInVzZXJJZCI6NSwibmFtZSI6Iu2Zjeq4uOuPmSIsImlhdCI6MTczMDk4NTgzMSwiZXhwIjoxNzMxMjQ1MDMxfQ.62nZn-AGjZZOieUJf0mWhvaC0WrTbC8anc9GUQ75Vgw";
 
 // 7일간의 푸시업 예시 데이터
 const data7Days = [
@@ -40,6 +43,31 @@ const paceData = [
 function MainPage() {
   const [cookies] = useCookies(['access_token']);
   const [tokenMessage, setTokenMessage] = useState("");
+  const [statistics, setStatistics] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/statistics/weekly-stats/me`, {
+          headers: {
+            Authorization: `Bearer ${TEST_TOKEN}`,
+          },
+        });
+        setStatistics(response.data);
+      } catch (error) {
+        console.error("서버 통신 오류:", error);
+        if (error.response) {
+          setErrorMessage(`서버에 연결할 수 없습니다. 상태 코드: ${error.response.status}`);
+        } else {
+          setErrorMessage("서버에 연결할 수 없습니다. 네트워크 오류입니다.");
+        }
+      }
+    };
+
+    fetchStatistics();
+  }, [cookies]);
+
 
   // 버튼 클릭 시 쿠키의 access token을 가져오는 함수
   const handleShowToken = () => {
@@ -91,6 +119,15 @@ function MainPage() {
         <h2 style={styles.title}>통계</h2>
       </header>
 
+      <div>
+        {errorMessage && <p>{errorMessage}</p>}
+        {statistics ? (
+          <pre>{JSON.stringify(statistics, null, 2)}</pre>
+        ) : (
+          <p>데이터 로딩 중...</p>
+        )}
+      </div>
+
       <div style={styles.content}>
         <div style={styles.chartSection}>
           <h3 style={styles.sectionTitle}>최근 7일 운동</h3>
@@ -123,7 +160,6 @@ function DailyRecordPage() {
   const [cookies] = useCookies(['access_token']);
   const [tokenMessage, setTokenMessage] = useState("");
   const [date, setDate] = useState(new Date());
-  const navigate = useNavigate(); // 뒤로가기
 
   const handleShowToken = () => {
     const accessToken = cookies.access_token;
@@ -142,7 +178,7 @@ function DailyRecordPage() {
     <ResponsiveContainer width="100%" height={200}>
       <LineChart data={paceData}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="구간" interval={0} tick={{ fontSize: 10 }} /> {/* 글자 크기 조정 */}
+        <XAxis dataKey="구간" interval={0} tick={{ fontSize: 10 }} />
         <YAxis domain={[0, 20]} />
         <Tooltip />
         <Line type="monotone" dataKey="속도" stroke="#82ca9d" dot={false} />
@@ -150,13 +186,9 @@ function DailyRecordPage() {
     </ResponsiveContainer>
   );
 
-
   return (
     <div style={styles.container}>
       <header style={styles.header}>
-        <button onClick={() => navigate(-1)} style={styles.backButton}>
-          ⏎
-        </button>
         <h2 style={styles.title}>캘린더</h2>
       </header>
 
@@ -194,7 +226,6 @@ function DailyRecordPage() {
     </div>
   );
 }
-
 
 // 기본 App 컴포넌트
 function App() {
@@ -309,7 +340,6 @@ const styles = {
     padding: "5px 10px",
     borderRadius: "5px",
   },
-
 };
 
 export default App;
