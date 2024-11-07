@@ -10,6 +10,23 @@ import { useCookies } from "react-cookie";
 const BASE_URL = "http://3.36.72.104:8080";
 const TEST_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkZXZpY2VJZCI6ImRldmljZTEyMzQ1Njc4OSIsInVzZXJJZCI6NSwibmFtZSI6Iu2Zjeq4uOuPmSIsImlhdCI6MTczMDk4NTgzMSwiZXhwIjoxNzMxMjQ1MDMxfQ.62nZn-AGjZZOieUJf0mWhvaC0WrTbC8anc9GUQ75Vgw";
 
+// 날짜별 운동 데이터 예시
+const exerciseData = {
+  "2024-11-01": { time: "02:00", count: 30, pace: 1.87 },
+  "2024-11-02": { time: "02:00", count: 35, pace: 1.75 },
+  "2024-11-03": { time: "02:00", count: 48, pace: 1.92 },
+  "2024-11-04": { time: "02:00", count: 53, pace: 1.87 },
+  "2024-11-05": { time: "02:00", count: 60, pace: 1.75 },
+  "2024-11-06": { time: "02:00", count: 65, pace: 1.92 },
+  "2024-11-07": { time: "02:00", count: 68, pace: 1.87 },
+
+  "2024-11-09": { time: "02:00", count: 72, pace: 1.92 },
+  "2024-11-10": { time: "02:00", count: 77, pace: 1.87 },
+  "2024-11-11": { time: "02:00", count: 80, pace: 1.75 },
+
+  // 추가적인 날짜별 데이터 입력 가능
+};
+
 // 7일간의 푸시업 예시 데이터
 const data7Days = [
   { date: "08.06", 횟수: 48 },
@@ -53,14 +70,18 @@ function MainPage() {
           headers: {
             Authorization: `Bearer ${TEST_TOKEN}`,
           },
+          timeout: 5000, // 5초 후 타임아웃 설정
         });
         setStatistics(response.data);
       } catch (error) {
         console.error("서버 통신 오류:", error);
         if (error.response) {
           setErrorMessage(`서버에 연결할 수 없습니다. 상태 코드: ${error.response.status}`);
+        } else if (error.request) {
+          setErrorMessage("요청을 전송했지만 응답이 없습니다. 서버가 요청을 처리하지 못했을 가능성이 있습니다.");
+          console.log("요청 세부 정보:", error.request);
         } else {
-          setErrorMessage("서버에 연결할 수 없습니다. 네트워크 오류입니다.");
+          setErrorMessage(`요청 설정 오류: ${error.message}`);
         }
       }
     };
@@ -160,6 +181,38 @@ function DailyRecordPage() {
   const [cookies] = useCookies(['access_token']);
   const [tokenMessage, setTokenMessage] = useState("");
   const [date, setDate] = useState(new Date());
+  const [selectedRecord, setSelectedRecord] = useState(null); // 선택한 날짜의 운동 기록
+  const [grade, setGrade] = useState(""); // 횟수에 따른 등급
+
+  // 선택한 날짜의 운동 기록을 가져오는 함수
+  const fetchExerciseData = (selectedDate) => {
+    const selectedDateString = selectedDate.toISOString().split("T")[0]; // "YYYY-MM-DD" 형식으로 변환
+
+    const record = Object.keys(exerciseData).find((dateKey) => {
+      const recordDateString = new Date(dateKey).toISOString().split("T")[0];
+      return selectedDateString === recordDateString;
+    });
+
+    // 선택한 날짜에 해당하는 기록이 있으면 setSelectedRecord에 설정
+    setSelectedRecord(record ? exerciseData[record] : null);
+
+    // 등급 계산
+    if (record) {
+      const calculatedGrade = calculateGrade(exerciseData[record].count);
+      setGrade(calculatedGrade);
+    } else {
+      setGrade("");
+    }
+  };
+
+  // 등급을 계산하는 함수
+  const calculateGrade = (count) => {
+    if (count >= pushupLevels[3].value) return "특급";
+    if (count >= pushupLevels[2].value) return "1급";
+    if (count >= pushupLevels[1].value) return "2급";
+    if (count >= pushupLevels[0].value) return "3급";
+    return "불합격";
+  };
 
   const handleShowToken = () => {
     const accessToken = cookies.access_token;
@@ -173,6 +226,10 @@ function DailyRecordPage() {
     }
     return false;
   };
+
+  useEffect(() => {
+    fetchExerciseData(date);
+  }, [date]);
 
   const renderLineChart = () => (
     <ResponsiveContainer width="100%" height={200}>
@@ -203,12 +260,17 @@ function DailyRecordPage() {
         </div>
 
         <div style={styles.recordSection}>
-          <h3 style={styles.sectionTitle}>1 등급 입니다 🎉</h3>
-          <div style={styles.recordDetails}>
-            <p>시간: 02:00</p>
-            <p>횟수: 65</p>
-            <p>평균 페이스: 10.8</p>
-          </div>
+          {selectedRecord ? (
+            <>
+              <h3 style={styles.sectionTitle}>선택한 날짜의 운동 기록</h3>
+              <p>시간: {selectedRecord.time}</p>
+              <p>횟수: {selectedRecord.count}</p>
+              <p>평균 페이스: {selectedRecord.pace}</p>
+              <p>등급: {grade}</p> {/* 계산된 등급 표시 */}
+            </>
+          ) : (
+            <p>해당 날짜의 운동 기록이 없습니다.</p>
+          )}
         </div>
 
         <div style={styles.chartSection}>
