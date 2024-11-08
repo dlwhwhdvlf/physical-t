@@ -18,7 +18,7 @@ const exerciseData = {
   "2024-11-04": { time: "02:00", count: 53, pace: 1.87 },
   "2024-11-05": { time: "02:00", count: 60, pace: 1.75 },
   "2024-11-06": { time: "02:00", count: 65, pace: 1.92 },
-  "2024-11-07": { time: "02:00", count: 68, pace: 1.87 },
+  "2024-11-08": { time: "02:00", count: 68, pace: 1.87 },
 
   "2024-11-09": { time: "02:00", count: 72, pace: 1.92 },
   "2024-11-10": { time: "02:00", count: 77, pace: 1.87 },
@@ -63,7 +63,7 @@ function MainPage() {
   const [statistics, setStatistics] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
-  useEffect(() => {
+  /*useEffect(() => {
     const fetchStatistics = async () => {
       try {
         const response = await axios.get(`${BASE_URL}/api/user/test3`, {
@@ -87,7 +87,7 @@ function MainPage() {
     };
 
     fetchStatistics();
-  }, [cookies]);
+  }, [cookies]);*/
 
 
   // 버튼 클릭 시 쿠키의 access token을 가져오는 함수
@@ -140,15 +140,6 @@ function MainPage() {
         <h2 style={styles.title}>통계</h2>
       </header>
 
-      <div>
-        {errorMessage && <p>{errorMessage}</p>}
-        {statistics ? (
-          <pre>{JSON.stringify(statistics, null, 2)}</pre>
-        ) : (
-          <p>데이터 로딩 중...</p>
-        )}
-      </div>
-
       <div style={styles.content}>
         <div style={styles.chartSection}>
           <h3 style={styles.sectionTitle}>최근 7일 운동</h3>
@@ -186,19 +177,13 @@ function DailyRecordPage() {
 
   // 선택한 날짜의 운동 기록을 가져오는 함수
   const fetchExerciseData = (selectedDate) => {
-    const selectedDateString = selectedDate.toISOString().split("T")[0]; // "YYYY-MM-DD" 형식으로 변환
-
-    const record = Object.keys(exerciseData).find((dateKey) => {
-      const recordDateString = new Date(dateKey).toISOString().split("T")[0];
-      return selectedDateString === recordDateString;
-    });
-
-    // 선택한 날짜에 해당하는 기록이 있으면 setSelectedRecord에 설정
-    setSelectedRecord(record ? exerciseData[record] : null);
+    const formattedDate = selectedDate.toISOString().split('T')[0];
+    const record = exerciseData[formattedDate];
+    setSelectedRecord(record || null); // 기록이 없으면 null 설정
 
     // 등급 계산
     if (record) {
-      const calculatedGrade = calculateGrade(exerciseData[record].count);
+      const calculatedGrade = calculateGrade(record.count);
       setGrade(calculatedGrade);
     } else {
       setGrade("");
