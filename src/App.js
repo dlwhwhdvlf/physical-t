@@ -93,7 +93,7 @@ function MainPage() {
     <ResponsiveContainer width="100%" height={250}>
       <BarChart data={data7Days}>
         <CartesianGrid vertical={false} stroke="#444" />
-        <XAxis dataKey="date" stroke="#888" tick={{ fontSize: 3 }} interval={0} />
+        <XAxis dataKey="date" stroke="#888" tick={{ fontSize: 5 }} interval={0} />
         <YAxis
           domain={[40, 80]}  // 고정된 Y축 범위 설정
           ticks={[pushupLevels[0].value, pushupLevels[1].value, pushupLevels[2].value, pushupLevels[3].value]}
