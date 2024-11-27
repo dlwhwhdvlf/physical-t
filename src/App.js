@@ -56,15 +56,15 @@ const paceData = [
 ];
 
 function MainPage() {
-  const [cookies] = useCookies(['access_token']);
-  //const [cookies] = useCookies(["access_token", "userid"]);
+  //onst [cookies] = useCookies(['access_token']);
+  const [cookies] = useCookies(["access_token", "user_id"]);
   const [tokenMessage, setTokenMessage] = useState("");
   const [statistics, setStatistics] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [data7Days, setData7Days] = useState([]);
   const [loading, setLoading] = useState(true); // 로딩 상태 추가
 
-  const userid = 8; //cookies.userid; 쿠키에서 userid 추출
+  const userid = cookies.user_id; //쿠키에서 userid 추출
 
 
   useEffect(() => {
@@ -196,12 +196,13 @@ function MainPage() {
 
 // 날짜별 운동 기록 페이지 컴포넌트
 function DailyRecordPage() {
-  const [cookies] = useCookies(["access_token"]);
-  //const [cookies] = useCookies(["access_token", "userid"]);
+  //const [cookies] = useCookies(["access_token"]);
+  const [cookies] = useCookies(["access_token", "user_id"]);
   const [date, setDate] = useState(new Date());
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const userid = 8;//cookies.userid;  쿠키에서 userid 추출 우선 하드코딩
+
+  const userid = cookies.user_id;  //쿠키에서 userid 추출 우선 하드코딩
 
 
   const calculateGrade = (count) => {
