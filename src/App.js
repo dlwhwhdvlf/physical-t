@@ -76,7 +76,7 @@ function MainPage() {
       try {
         const response = await axios.get(`${BASE_URL}/api/statistics/weekly-stats/${userid}`, {
           headers: {
-            Authorization: `Bearer ${TEST_TOKEN}`,
+            Authorization: `Bearer ${access_token}`,
           },
         });
 
@@ -223,7 +223,7 @@ function DailyRecordPage() {
         // API 요청
         const response = await axios.get(`${BASE_URL}/api/statistics/weekly-stats/${userid}`, {
           headers: {
-            Authorization: `Bearer ${TEST_TOKEN}`,
+            Authorization: `Bearer ${access_token}`,
           },
         });
 
