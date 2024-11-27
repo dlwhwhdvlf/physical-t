@@ -57,7 +57,7 @@ const paceData = [
 
 function MainPage() {
   //onst [cookies] = useCookies(['access_token']);
-  const [cookies] = useCookies(["access_token", "user_id"]);
+  const [cookies] = useCookies(["access_token", "user_id, user_name"]);
   const [tokenMessage, setTokenMessage] = useState("");
   const [statistics, setStatistics] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
@@ -65,7 +65,7 @@ function MainPage() {
   const [loading, setLoading] = useState(true); // 로딩 상태 추가
 
   const userid = cookies.user_id; //쿠키에서 userid 추출
-
+  const userName = cookies.user_name || "없음";
 
   useEffect(() => {
     const fetchStatistics = async () => {
@@ -111,7 +111,6 @@ function MainPage() {
 
     fetchStatistics();
   }, [userid, cookies.access_token]);
-
 
   // 버튼 클릭 시 쿠키의 access token을 가져오는 함수
   const handleShowToken = () => {
@@ -160,7 +159,7 @@ function MainPage() {
   return (
     <div style={styles.container}>
       <header style={styles.header}>
-        <h2 style={styles.title}>통계</h2>
+        <h2 style={styles.title}>{userName}님 통계</h2> {/* 사용자 이름 표시 */}
       </header>
 
       <div>
