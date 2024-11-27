@@ -77,15 +77,24 @@ function MainPage() {
             Authorization: `Bearer ${TEST_TOKEN}`,
           },
         });
-        // 서버 응답에서 필요한 데이터 추출
-        const formattedData = response.data.data.pushupStats.map((item) => ({
-          date: item.date, // 날짜 필드
-          횟수: item.quantity, // 푸시업 횟수 필드
-        }));
+        const pushupStats = response.data.data.pushupStats;
+
+        // 오늘 날짜부터 6일 전까지의 날짜를 생성
+        const today = new Date();
+        const dates = Array.from({ length: 7 }, (_, i) => {
+          const date = new Date();
+          date.setDate(today.getDate() - i);
+          return date.toISOString().split("T")[0];
+        }).reverse();
+
+        // 날짜별 데이터를 0으로 초기화
+        const completeData = dates.map((date) => {
+          const record = pushupStats.find((item) => item.date === date);
+          return { date, 횟수: record ? record.quantity : 0 };
+        });
 
         // 상태 업데이트
-        setStatistics(response.data);
-        setData7Days(formattedData); // data7Days 업데이트
+        setData7Days(completeData);
       } catch (error) {
         console.error("서버 통신 오류:", error);
         setErrorMessage("데이터를 가져오는 데 실패했습니다. 다시 시도해주세요.");
