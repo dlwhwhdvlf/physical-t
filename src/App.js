@@ -62,7 +62,9 @@ function MainPage() {
   const [statistics, setStatistics] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [data7Days, setData7Days] = useState([]);
-  const userid = 2; //cookies.userid; 쿠키에서 userid 추출
+  const [loading, setLoading] = useState(true); // 로딩 상태 추가
+
+  const userid = 8; //cookies.userid; 쿠키에서 userid 추출
 
 
   useEffect(() => {
@@ -77,32 +79,38 @@ function MainPage() {
             Authorization: `Bearer ${TEST_TOKEN}`,
           },
         });
+
         const pushupStats = response.data.data.pushupStats;
 
-        // 오늘 날짜부터 6일 전까지의 날짜를 생성
+        // 오늘 날짜 계산
         const today = new Date();
-        const dates = Array.from({ length: 7 }, (_, i) => {
-          const date = new Date();
-          date.setDate(today.getDate() - i);
-          return date.toISOString().split("T")[0];
-        }).reverse();
 
-        // 날짜별 데이터를 0으로 초기화
-        const completeData = dates.map((date) => {
+        // 최근 7일 날짜 배열 생성
+        const last7Days = Array.from({ length: 7 }, (_, i) => {
+          const date = new Date(today);
+          date.setDate(today.getDate() - (6 - i)); // 오늘부터 6일 전까지
+          return date.toISOString().split("T")[0];
+        });
+
+        // 날짜별 데이터를 0으로 초기화 후 서버 데이터를 매칭
+        const completeData = last7Days.map((date) => {
           const record = pushupStats.find((item) => item.date === date);
           return { date, 횟수: record ? record.quantity : 0 };
         });
 
         // 상태 업데이트
         setData7Days(completeData);
+        setStatistics(response.data); // 통계 데이터 저장
       } catch (error) {
         console.error("서버 통신 오류:", error);
         setErrorMessage("데이터를 가져오는 데 실패했습니다. 다시 시도해주세요.");
+      } finally {
+        setLoading(false); // 로딩 상태 완료
       }
     };
 
     fetchStatistics();
-  }, []);
+  }, [userid, cookies.access_token]);
 
 
   // 버튼 클릭 시 쿠키의 access token을 가져오는 함수
@@ -193,7 +201,7 @@ function DailyRecordPage() {
   const [date, setDate] = useState(new Date());
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const userid = 2;//cookies.userid;  쿠키에서 userid 추출 우선 2로 하드코딩
+  const userid = 8;//cookies.userid;  쿠키에서 userid 추출 우선 하드코딩
 
 
   const calculateGrade = (count) => {
