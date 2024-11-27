@@ -10,34 +10,6 @@ import { useCookies } from "react-cookie";
 const BASE_URL = "https://physical-track.site";
 const TEST_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkZXZpY2VJZCI6ImRldmljZTEyMzQ1Njc4OSIsInVzZXJJZCI6NSwibmFtZSI6Iu2Zjeq4uOuPmSIsImlhdCI6MTczMDk4NzMyMywiZXhwIjoxOTkwMTg3MzIzfQ.r_REPaYe8UGXiWJ92Gseo_wp7rSNl5RMtjhxUpYCxXw";
 
-// 날짜별 운동 데이터 예시
-/*const exerciseData = {
-  "2024-11-01": { time: "02:00", count: 30, pace: 1.87 },
-  "2024-11-02": { time: "02:00", count: 35, pace: 1.75 },
-  "2024-11-03": { time: "02:00", count: 48, pace: 1.92 },
-  "2024-11-04": { time: "02:00", count: 53, pace: 1.87 },
-  "2024-11-05": { time: "02:00", count: 60, pace: 1.75 },
-  "2024-11-06": { time: "02:00", count: 65, pace: 1.92 },
-  "2024-11-07": { time: "02:00", count: 68, pace: 1.87 },
-
-  "2024-11-09": { time: "02:00", count: 72, pace: 1.92 },
-  "2024-11-10": { time: "02:00", count: 77, pace: 1.87 },
-  "2024-11-11": { time: "02:00", count: 80, pace: 1.75 },
-
-  // 추가적인 날짜별 데이터 입력 가능
-};
-
-// 7일간의 푸시업 예시 데이터
-const data7Days = [
-  { date: "08.06", 횟수: 48 },
-  { date: "08.07", 횟수: 56 },
-  { date: "08.08", 횟수: 64 },
-  { date: "08.09", 횟수: 72 },
-  { date: "08.10", 횟수: null },
-  { date: "08.11", 횟수: 80 },
-  { date: "08.12", 횟수: null },
-];*/
-
 // 푸시업에 대한 등급 기준선
 const pushupLevels = [
   { value: 48, label: "3급", color: "#ff7979" },
@@ -56,7 +28,6 @@ const paceData = [
 ];
 
 function MainPage() {
-  //onst [cookies] = useCookies(['access_token']);
   const [cookies] = useCookies(["access_token", "user_id, user_name"]);
   const [tokenMessage, setTokenMessage] = useState("");
   const [statistics, setStatistics] = useState(null);
@@ -64,8 +35,8 @@ function MainPage() {
   const [data7Days, setData7Days] = useState([]);
   const [loading, setLoading] = useState(true); // 로딩 상태 추가
 
-  const userid = cookies.user_id; //쿠키에서 userid 추출
-  const userName = cookies.user_name || "없음";
+  const userid = cookies.user_id;
+  const userName = cookies.user_name || "???";
 
   useEffect(() => {
     const fetchStatistics = async () => {
@@ -122,7 +93,7 @@ function MainPage() {
     <ResponsiveContainer width="100%" height={250}>
       <BarChart data={data7Days}>
         <CartesianGrid vertical={false} stroke="#444" />
-        <XAxis dataKey="date" stroke="#888" tick={{ fontSize: 10 }} />
+        <XAxis dataKey="date" stroke="#888" tick={{ fontSize: 10 }} interval={0} />
         <YAxis
           domain={[40, 80]}  // 고정된 Y축 범위 설정
           ticks={[pushupLevels[0].value, pushupLevels[1].value, pushupLevels[2].value, pushupLevels[3].value]}
@@ -195,13 +166,12 @@ function MainPage() {
 
 // 날짜별 운동 기록 페이지 컴포넌트
 function DailyRecordPage() {
-  //const [cookies] = useCookies(["access_token"]);
   const [cookies] = useCookies(["access_token", "user_id"]);
   const [date, setDate] = useState(new Date());
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const userid = cookies.user_id;  //쿠키에서 userid 추출 우선 하드코딩
+  const userid = cookies.user_id;
 
 
   const calculateGrade = (count) => {
