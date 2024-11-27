@@ -8,10 +8,10 @@ import './Calendar.css';
 import { useCookies } from "react-cookie";
 
 const BASE_URL = "http://3.36.72.104:8080";
-const TEST_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkZXZpY2VJZCI6ImRldmljZTEyMzQ1Njc4OSIsInVzZXJJZCI6NSwibmFtZSI6Iu2Zjeq4uOuPmSIsImlhdCI6MTczMDk4NTgzMSwiZXhwIjoxNzMxMjQ1MDMxfQ.62nZn-AGjZZOieUJf0mWhvaC0WrTbC8anc9GUQ75Vgw";
+const TEST_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkZXZpY2VJZCI6ImRldmljZTEyMzQ1Njc4OSIsInVzZXJJZCI6NSwibmFtZSI6Iu2Zjeq4uOuPmSIsImlhdCI6MTczMDk4NzMyMywiZXhwIjoxOTkwMTg3MzIzfQ.r_REPaYe8UGXiWJ92Gseo_wp7rSNl5RMtjhxUpYCxXw";
 
 // 날짜별 운동 데이터 예시
-const exerciseData = {
+/*const exerciseData = {
   "2024-11-01": { time: "02:00", count: 30, pace: 1.87 },
   "2024-11-02": { time: "02:00", count: 35, pace: 1.75 },
   "2024-11-03": { time: "02:00", count: 48, pace: 1.92 },
@@ -19,7 +19,7 @@ const exerciseData = {
   "2024-11-05": { time: "02:00", count: 60, pace: 1.75 },
   "2024-11-06": { time: "02:00", count: 65, pace: 1.92 },
   "2024-11-07": { time: "02:00", count: 68, pace: 1.87 },
-  "2024-11-08": { time: "02:00", count: 70, pace: 1.92 },
+
   "2024-11-09": { time: "02:00", count: 72, pace: 1.92 },
   "2024-11-10": { time: "02:00", count: 77, pace: 1.87 },
   "2024-11-11": { time: "02:00", count: 80, pace: 1.75 },
@@ -36,7 +36,7 @@ const data7Days = [
   { date: "08.10", 횟수: null },
   { date: "08.11", 횟수: 80 },
   { date: "08.12", 횟수: null },
-];
+];*/
 
 // 푸시업에 대한 등급 기준선
 const pushupLevels = [
@@ -48,46 +48,52 @@ const pushupLevels = [
 
 // 페이스 데이터 예시 (구간별 속도)
 const paceData = [
-  { 구간: "0s", 속도: 0 },
-  { 구간: "20s", 속도: 15 },
-  { 구간: "40s", 속도: 13 },
-  { 구간: "60s", 속도: 12 },
-  { 구간: "80s", 속도: 10 },
-  { 구간: "100s", 속도: 9 },
-  { 구간: "120s", 속도: 6 },
+  { 구간: "0", 속도: 0 },
+  { 구간: "30", 속도: 20 },
+  { 구간: "60", 속도: 21 },
+  { 구간: "90", 속도: 17 },
+  { 구간: "120s", 속도: 15 }
 ];
 
 function MainPage() {
   const [cookies] = useCookies(['access_token']);
+  //const [cookies] = useCookies(["access_token", "userid"]);
   const [tokenMessage, setTokenMessage] = useState("");
   const [statistics, setStatistics] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [data7Days, setData7Days] = useState([]);
+  const userid = 2; //cookies.userid; 쿠키에서 userid 추출
 
-  /*useEffect(() => {
+
+  useEffect(() => {
     const fetchStatistics = async () => {
+      if (!userid) {
+        setErrorMessage("사용자 ID가 설정되지 않았습니다.");
+        return;
+      }
       try {
-        const response = await axios.get(`${BASE_URL}/api/user/test3`, {
+        const response = await axios.get(`${BASE_URL}/api/statistics/weekly-stats/${userid}`, {
           headers: {
             Authorization: `Bearer ${TEST_TOKEN}`,
           },
-          timeout: 5000, // 5초 후 타임아웃 설정
         });
+        // 서버 응답에서 필요한 데이터 추출
+        const formattedData = response.data.data.pushupStats.map((item) => ({
+          date: item.date, // 날짜 필드
+          횟수: item.quantity, // 푸시업 횟수 필드
+        }));
+
+        // 상태 업데이트
         setStatistics(response.data);
+        setData7Days(formattedData); // data7Days 업데이트
       } catch (error) {
         console.error("서버 통신 오류:", error);
-        if (error.response) {
-          setErrorMessage(`서버에 연결할 수 없습니다. 상태 코드: ${error.response.status}`);
-        } else if (error.request) {
-          setErrorMessage("요청을 전송했지만 응답이 없습니다. 서버가 요청을 처리하지 못했을 가능성이 있습니다.");
-          console.log("요청 세부 정보:", error.request);
-        } else {
-          setErrorMessage(`요청 설정 오류: ${error.message}`);
-        }
+        setErrorMessage("데이터를 가져오는 데 실패했습니다. 다시 시도해주세요.");
       }
     };
 
     fetchStatistics();
-  }, [cookies]);*/
+  }, []);
 
 
   // 버튼 클릭 시 쿠키의 access token을 가져오는 함수
@@ -140,10 +146,14 @@ function MainPage() {
         <h2 style={styles.title}>통계</h2>
       </header>
 
+      <div>
+        {errorMessage && <p>{errorMessage}</p>}
+        {!statistics && !errorMessage && <p>데이터 로딩 중...</p>}
+      </div>
+
       <div style={styles.content}>
         <div style={styles.chartSection}>
           <h3 style={styles.sectionTitle}>최근 7일 운동</h3>
-          <span style={styles.dateRange}>08.06 - 08.12</span>
           <div style={styles.chartContainer}>{renderBarChart()}</div>
         </div>
 
@@ -169,28 +179,14 @@ function MainPage() {
 
 // 날짜별 운동 기록 페이지 컴포넌트
 function DailyRecordPage() {
-  const [cookies] = useCookies(['access_token']);
-  const [tokenMessage, setTokenMessage] = useState("");
+  const [cookies] = useCookies(["access_token"]);
+  //const [cookies] = useCookies(["access_token", "userid"]);
   const [date, setDate] = useState(new Date());
-  const [selectedRecord, setSelectedRecord] = useState(null); // 선택한 날짜의 운동 기록
-  const [grade, setGrade] = useState(""); // 횟수에 따른 등급
+  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const userid = 2;//cookies.userid;  쿠키에서 userid 추출 우선 2로 하드코딩
 
-  // 선택한 날짜의 운동 기록을 가져오는 함수
-  const fetchExerciseData = (selectedDate) => {
-    const formattedDate = selectedDate.toISOString().split('T')[0];
-    const record = exerciseData[formattedDate];
-    setSelectedRecord(record || null); // 기록이 없으면 null 설정
 
-    // 등급 계산
-    if (record) {
-      const calculatedGrade = calculateGrade(record.count);
-      setGrade(calculatedGrade);
-    } else {
-      setGrade("");
-    }
-  };
-
-  // 등급을 계산하는 함수
   const calculateGrade = (count) => {
     if (count >= pushupLevels[3].value) return "특급";
     if (count >= pushupLevels[2].value) return "1급";
@@ -199,10 +195,54 @@ function DailyRecordPage() {
     return "불합격";
   };
 
-  const handleShowToken = () => {
-    const accessToken = cookies.access_token;
-    setTokenMessage(accessToken ? `Access Token: ${accessToken}` : "토큰이 설정되지 않았습니다.");
-  };
+  useEffect(() => {
+    const fetchExerciseData = async () => {
+      if (!userid) {
+        setErrorMessage("사용자 ID가 설정되지 않았습니다.");
+        return;
+      }
+      try {
+        // API 요청
+        const response = await axios.get(`${BASE_URL}/api/statistics/weekly-stats/${userid}`, {
+          headers: {
+            Authorization: `Bearer ${TEST_TOKEN}`,
+          },
+        });
+
+        // 서버에서 받은 데이터 확인
+        const pushupStats = response.data.data.pushupStats;
+
+        // 캘린더에서 선택된 날짜와 매칭되는 데이터 찾기
+        // 선택된 날짜를 9시간 추가한 후, "YYYY-MM-DD" 형식으로 변환
+        const adjustedDate = new Date(date.getTime() + 9 * 60 * 60 * 1000); // 9시간(9 * 60 * 60 * 1000) 추가
+        const formattedDate = adjustedDate.toISOString().split("T")[0];
+        console.log("선택한 날짜:", formattedDate);
+        console.log("서버 응답 데이터:", pushupStats);
+
+        const record = pushupStats.find((item) => item.date === formattedDate);
+        setSelectedRecord(record || null); // 데이터 없으면 null로 설정
+        setErrorMessage(""); // 오류 메시지 초기화
+      } catch (error) {
+        console.error("서버 통신 오류:", error);
+        setErrorMessage("데이터를 가져오는 데 실패했습니다. 다시 시도해주세요.");
+        setSelectedRecord(null); // 오류 시 선택된 기록 초기화
+      }
+    };
+
+    fetchExerciseData();
+  }, [date, userid, cookies.access_token]); // date 변경 시 API 다시 호출
+
+  const renderLineChart = () => (
+    <ResponsiveContainer width="100%" height={200}>
+      <LineChart data={paceData}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="구간" interval={0} tick={{ fontSize: 10 }} /> {/* 글자 크기 조정 */}
+        <YAxis domain={[0, 20]} />
+        <Tooltip />
+        <Line type="monotone" dataKey="속도" stroke="#82ca9d" dot={false} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
 
   const tileDisabled = ({ date, view }) => {
     if (view === "month") {
@@ -211,22 +251,6 @@ function DailyRecordPage() {
     }
     return false;
   };
-
-  useEffect(() => {
-    fetchExerciseData(date);
-  }, [date]);
-
-  const renderLineChart = () => (
-    <ResponsiveContainer width="100%" height={200}>
-      <LineChart data={paceData}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="구간" interval={0} tick={{ fontSize: 10 }} />
-        <YAxis domain={[0, 20]} />
-        <Tooltip />
-        <Line type="monotone" dataKey="속도" stroke="#82ca9d" dot={false} />
-      </LineChart>
-    </ResponsiveContainer>
-  );
 
   return (
     <div style={styles.container}>
@@ -237,21 +261,23 @@ function DailyRecordPage() {
       <div style={styles.content}>
         <div style={styles.calendarSection}>
           <Calendar
-            onChange={setDate}
+            onChange={setDate} // 캘린더에서 날짜 선택 시 업데이트
             value={date}
-            tileDisabled={tileDisabled}
-            showNeighboringMonth={false}
+            tileDisabled={tileDisabled} // 현재 월 외의 날짜 비활성화
+            showNeighboringMonth={false} // 인접 월 숨김
           />
         </div>
 
         <div style={styles.recordSection}>
-          {selectedRecord ? (
+          {errorMessage ? (
+            <p>{errorMessage}</p>
+          ) : selectedRecord ? (
             <>
               <h3 style={styles.sectionTitle}>선택한 날짜의 운동 기록</h3>
-              <p>시간: {selectedRecord.time}</p>
-              <p>횟수: {selectedRecord.count}</p>
-              <p>평균 페이스: {selectedRecord.pace}</p>
-              <p>등급: {grade}</p> {/* 계산된 등급 표시 */}
+              <p>날짜: {new Date(new Date(selectedRecord.date).setDate(new Date(selectedRecord.date).getDate())).toISOString().split("T")[0]}</p>
+              <p>횟수: {selectedRecord.quantity}</p>
+              <p>등급: {calculateGrade(selectedRecord.quantity)}</p>
+              <p>평균 페이스: {selectedRecord.pace || "정보 없음"}</p>
             </>
           ) : (
             <p>해당 날짜의 운동 기록이 없습니다.</p>
@@ -264,15 +290,10 @@ function DailyRecordPage() {
           <div style={styles.chartContainer}>{renderLineChart()}</div>
         </div>
       </div>
-
-      {/* 우측 하단 버튼 */}
-      <button onClick={handleShowToken} style={styles.saveTokenButton}>
-        토큰 보기
-      </button>
-      {tokenMessage && <p style={styles.tokenMessage}>{tokenMessage}</p>}
     </div>
   );
 }
+
 
 // 기본 App 컴포넌트
 function App() {
