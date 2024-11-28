@@ -202,20 +202,7 @@ function DailyRecordPage() {
 
       // 운동 데이터가 있는 날짜에 점 표시
       if (hasRecord) {
-        return (
-          <div
-            style={{
-              position: "absolute", // 위치를 절대값으로 설정
-              bottom: "10%",       // 점이 날짜 아래 정렬되도록 조정
-              left: "50%",         // 수평 중앙 정렬
-              transform: "translateX(-50%)", // 수평 이동 보정
-              color: "#3498db",    // 점 색상
-              fontSize: "16px",    // 점 크기
-            }}
-          >
-            •
-          </div>
-        );
+        return <div style={{ color: "blue", fontSize: "10px", textAlign: "center" }}>•</div>;
       }
     }
     return null;
@@ -243,13 +230,9 @@ function DailyRecordPage() {
 
   useEffect(() => {
     if (date) {
-      // 선택한 날짜를 서울 시간 기준으로 변환
-      const adjustedDate = new Date(date.getTime() + 9 * 60 * 60 * 1000); // UTC에서 +9시간
-      const formattedDate = adjustedDate.toISOString().split("T")[0];
-
-      // 서버 데이터에서 선택한 날짜에 해당하는 기록 찾기
+      const formattedDate = date.toISOString().split("T")[0];
       const record = exerciseData.find((item) => item.date === formattedDate);
-      setSelectedRecord(record || null); // 데이터가 없으면 null로 설정
+      setSelectedRecord(record || null); // 데이터 없으면 null로 설정
     }
   }, [date, exerciseData]);
 
