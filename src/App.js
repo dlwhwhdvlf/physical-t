@@ -214,7 +214,8 @@ function DailyRecordPage() {
 
   const tileContent = ({ date, view }) => {
     if (view === "month") {
-      const formattedDate = date.toISOString().split("T")[0];
+      // 캘린더의 날짜에 9시간 추가
+      const formattedDate = addNineHours(date.toISOString());
       const hasRecord = exerciseData.some((record) => record.date === formattedDate);
 
       if (hasRecord) {
@@ -234,7 +235,7 @@ function DailyRecordPage() {
         );
       }
     }
-    return null;
+    return null; // 점 표시하지 않음
   };
 
   const tileDisabled = ({ date, view }) => {
