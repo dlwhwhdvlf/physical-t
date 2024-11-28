@@ -155,17 +155,10 @@ function DailyRecordPage() {
   const [cookies] = useCookies(["access_token", "user_id", "user_name"]);
   const [date, setDate] = useState(new Date());
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [exerciseData, setExerciseData] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
 
   const userid = cookies.user_id;
-
-  const calculateGrade = (count) => {
-    if (count >= pushupLevels[3].value) return "특급";
-    if (count >= pushupLevels[2].value) return "1급";
-    if (count >= pushupLevels[1].value) return "2급";
-    if (count >= pushupLevels[0].value) return "3급";
-    return "불합격";
-  };
 
   useEffect(() => {
     const fetchExerciseData = async () => {
@@ -174,54 +167,74 @@ function DailyRecordPage() {
         return;
       }
       try {
-        // API 요청
+        // 서버에서 운동 데이터를 가져옴
         const response = await axios.get(`${BASE_URL}/api/statistics/weekly-stats/${userid}`, {
           headers: {
             Authorization: `Bearer ${cookies.access_token}`,
           },
         });
 
-        // 서버에서 받은 데이터 확인
-        const pushupStats = response.data.data.pushupStats;
+        // 서버 데이터 날짜 형식 변환
+        const pushupStats = response.data.data.pushupStats.map((item) => ({
+          ...item,
+          date: new Date(item.date).toLocaleDateString("ko-KR", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          }).replace(/\./g, "-").trim(), // 날짜 형식 변환
+        }));
 
-        // 캘린더에서 선택된 날짜와 매칭되는 데이터 찾기
-        // 선택된 날짜를 9시간 추가한 후, "YYYY-MM-DD" 형식으로 변환
-        const adjustedDate = new Date(date.getTime() + 9 * 60 * 60 * 1000); // 9시간(9 * 60 * 60 * 1000) 추가
-        const formattedDate = adjustedDate.toISOString().split("T")[0];
-        console.log("선택한 날짜:", formattedDate);
-        console.log("서버 응답 데이터:", pushupStats);
-
-        const record = pushupStats.find((item) => item.date === formattedDate);
-        setSelectedRecord(record || null); // 데이터 없으면 null로 설정
-        setErrorMessage(""); // 오류 메시지 초기화
+        setExerciseData(pushupStats);
+        setErrorMessage("");
       } catch (error) {
         console.error("서버 통신 오류:", error);
         setErrorMessage("데이터를 가져오는 데 실패했습니다. 다시 시도해주세요.");
-        setSelectedRecord(null); // 오류 시 선택된 기록 초기화
       }
     };
 
     fetchExerciseData();
-  }, [date, userid, cookies.access_token]); // date 변경 시 API 다시 호출
+  }, [userid, cookies.access_token]);
 
-  const renderLineChart = () => (
-    <ResponsiveContainer width="100%" height={200}>
-      <LineChart data={paceData}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="구간" interval={0} tick={{ fontSize: 10 }} /> {/* 글자 크기 조정 */}
-        <YAxis domain={[0, 20]} />
-        <Tooltip />
-        <Line type="monotone" dataKey="속도" stroke="#82ca9d" dot={false} />
-      </LineChart>
-    </ResponsiveContainer>
-  );
-
-  const tileDisabled = ({ date, view }) => {
-    if (view === "month") {
-      const currentMonth = new Date().getMonth();
-      return date.getMonth() !== currentMonth;
+  useEffect(() => {
+    if (date) {
+      const formattedDate = date.toLocaleDateString("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).replace(/\./g, "-").trim();
+      const record = exerciseData.find((item) => item.date === formattedDate);
+      setSelectedRecord(record || null);
     }
-    return false;
+  }, [date, exerciseData]);
+
+  const tileContent = ({ date, view }) => {
+    if (view === "month") {
+      const formattedDate = date.toLocaleDateString("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).replace(/\./g, "-").trim();
+
+      const hasRecord = exerciseData.some((record) => record.date === formattedDate);
+
+      if (hasRecord) {
+        return (
+          <div
+            style={{
+              position: "absolute",
+              bottom: "10%",
+              left: "50%",
+              transform: "translateX(-50%)",
+              color: "#3498db",
+              fontSize: "16px",
+            }}
+          >
+            •
+          </div>
+        );
+      }
+    }
+    return null;
   };
 
   return (
@@ -233,10 +246,9 @@ function DailyRecordPage() {
       <div style={styles.content}>
         <div style={styles.calendarSection}>
           <Calendar
-            onChange={setDate} // 캘린더에서 날짜 선택 시 업데이트
+            onChange={setDate}
             value={date}
-            tileDisabled={tileDisabled} // 현재 월 외의 날짜 비활성화
-            showNeighboringMonth={false} // 인접 월 숨김
+            tileContent={tileContent} // 점 표시 추가
           />
         </div>
 
@@ -246,25 +258,18 @@ function DailyRecordPage() {
           ) : selectedRecord ? (
             <>
               <h3 style={styles.sectionTitle}>선택한 날짜의 운동 기록</h3>
-              <p>날짜: {new Date(new Date(selectedRecord.date).setDate(new Date(selectedRecord.date).getDate())).toISOString().split("T")[0]}</p>
+              <p>날짜: {selectedRecord.date}</p>
               <p>횟수: {selectedRecord.quantity}</p>
-              <p>등급: {calculateGrade(selectedRecord.quantity)}</p>
-              <p>평균 페이스: {selectedRecord.pace || "정보 없음"}</p>
             </>
           ) : (
             <p>해당 날짜의 운동 기록이 없습니다.</p>
           )}
         </div>
-
-        <div style={styles.chartSection}>
-          <h3 style={styles.sectionTitle}>페이스</h3>
-          <span style={styles.description}>구간 별로 회원님의 운동 속도를 측정했어요</span>
-          <div style={styles.chartContainer}>{renderLineChart()}</div>
-        </div>
       </div>
     </div>
   );
 }
+
 
 
 // 기본 App 컴포넌트
