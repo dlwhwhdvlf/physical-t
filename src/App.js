@@ -29,14 +29,12 @@ const paceData = [
 
 function MainPage() {
   const [cookies] = useCookies(["access_token", "user_id, user_name"]);
-  const [tokenMessage, setTokenMessage] = useState("");
   const [statistics, setStatistics] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [data7Days, setData7Days] = useState([]);
   const [loading, setLoading] = useState(true); // 로딩 상태 추가
 
   const userid = cookies.user_id;
-  const userName = cookies.user_name || "???";
 
   useEffect(() => {
     const fetchStatistics = async () => {
@@ -83,12 +81,6 @@ function MainPage() {
     fetchStatistics();
   }, [userid, cookies.access_token]);
 
-  // 버튼 클릭 시 쿠키의 access token을 가져오는 함수
-  const handleShowToken = () => {
-    const accessToken = cookies.access_token;
-    setTokenMessage(accessToken ? `Access Token: ${accessToken}` : "토큰이 설정되지 않았습니다.");
-  };
-
   const renderBarChart = () => (
     <ResponsiveContainer width="100%" height={250}>
       <BarChart data={data7Days}>
@@ -130,7 +122,7 @@ function MainPage() {
   return (
     <div style={styles.container}>
       <header style={styles.header}>
-        <h2 style={styles.title}>{userName}님 통계</h2> {/* 사용자 이름 표시 */}
+        <h2 style={styles.title}>{cookies.user_name}님 통계</h2>
       </header>
 
       <div>
@@ -154,25 +146,18 @@ function MainPage() {
           <Link to="/daily-record" style={styles.button}>날짜별 운동 기록 보기</Link>
         </div>
       </div>
-
-      {/* 우측 하단 버튼 */}
-      <button onClick={handleShowToken} style={styles.saveTokenButton}>
-        토큰 보기
-      </button>
-      {tokenMessage && <p style={styles.tokenMessage}>{tokenMessage}</p>}
     </div>
   );
 }
 
 // 날짜별 운동 기록 페이지 컴포넌트
 function DailyRecordPage() {
-  const [cookies] = useCookies(["access_token", "user_id"]);
+  const [cookies] = useCookies(["access_token", "user_id", "user_name"]);
   const [date, setDate] = useState(new Date());
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
   const userid = cookies.user_id;
-
 
   const calculateGrade = (count) => {
     if (count >= pushupLevels[3].value) return "특급";
@@ -242,7 +227,7 @@ function DailyRecordPage() {
   return (
     <div style={styles.container}>
       <header style={styles.header}>
-        <h2 style={styles.title}>캘린더</h2>
+        <h2 style={styles.title}>{cookies.user_name}님 캘린더</h2>
       </header>
 
       <div style={styles.content}>
