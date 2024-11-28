@@ -256,13 +256,18 @@ function DailyRecordPage() {
         <div style={styles.recordSection}>
           {errorMessage ? (
             <p>{errorMessage}</p>
-          ) : selectedRecord ? (
+          ) : exerciseData.length > 0 ? (
             <>
               <h3 style={styles.sectionTitle}>선택한 날짜의 운동 기록</h3>
-              <p>날짜: {new Date(new Date(selectedRecord.date).setDate(new Date(selectedRecord.date).getDate())).toISOString().split("T")[0]}</p>
-              <p>횟수: {selectedRecord.quantity}</p>
-              <p>등급: {calculateGrade(selectedRecord.quantity)}</p>
-              <p>평균 페이스: {selectedRecord.pace || "정보 없음"}</p>
+              {exerciseData.map((record, index) => (
+                record.date === date.toISOString().split("T")[0] ? (
+                  <div key={index}>
+                    <p>날짜: {record.date}</p>
+                    <p>횟수: {record.quantity}</p>
+                    <p>등급: {calculateGrade(record.quantity)}</p>
+                  </div>
+                ) : null
+              ))}
             </>
           ) : (
             <p>해당 날짜의 운동 기록이 없습니다.</p>
