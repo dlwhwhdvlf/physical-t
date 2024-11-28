@@ -204,6 +204,19 @@ function DailyRecordPage() {
     fetchExerciseData();
   }, [date, userid, cookies.access_token]); // date 변경 시 API 다시 호출
 
+  const tileContent = ({ date, view }) => {
+    if (view === "month") {
+      const formattedDate = date.toISOString().split("T")[0];
+      const hasRecord = exerciseData.some((record) => record.date === formattedDate);
+
+      // 운동 데이터가 있는 날짜에 점 표시
+      if (hasRecord) {
+        return <div style={{ color: "blue", fontSize: "10px", textAlign: "center" }}>•</div>;
+      }
+    }
+    return null;
+  };
+
   const renderLineChart = () => (
     <ResponsiveContainer width="100%" height={200}>
       <LineChart data={paceData}>
