@@ -154,8 +154,8 @@ function MainPage() {
 function DailyRecordPage() {
   const [cookies] = useCookies(["access_token", "user_id", "user_name"]);
   const [date, setDate] = useState(new Date());
-  const [selectedRecord, setSelectedRecord] = useState(null);
   const [exerciseData, setExerciseData] = useState([]);
+  const [selectedRecord, setSelectedRecord] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
   const userid = cookies.user_id;
@@ -167,21 +167,15 @@ function DailyRecordPage() {
         return;
       }
       try {
-        // 서버에서 운동 데이터를 가져옴
         const response = await axios.get(`${BASE_URL}/api/statistics/weekly-stats/${userid}`, {
           headers: {
             Authorization: `Bearer ${cookies.access_token}`,
           },
         });
 
-        // 서버 데이터 날짜 형식 변환
         const pushupStats = response.data.data.pushupStats.map((item) => ({
           ...item,
-          date: new Date(item.date).toLocaleDateString("ko-KR", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-          }).replace(/\./g, "-").trim(), // 날짜 형식 변환
+          date: new Date(item.date).toISOString().split("T")[0], // 날짜 형식 변환
         }));
 
         setExerciseData(pushupStats);
@@ -197,24 +191,23 @@ function DailyRecordPage() {
 
   useEffect(() => {
     if (date) {
-      const formattedDate = date.toLocaleDateString("ko-KR", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      }).replace(/\./g, "-").trim();
+      const formattedDate = date.toISOString().split("T")[0];
       const record = exerciseData.find((item) => item.date === formattedDate);
       setSelectedRecord(record || null);
     }
   }, [date, exerciseData]);
 
+  const calculateGrade = (count) => {
+    if (count >= pushupLevels[3].value) return "특급";
+    if (count >= pushupLevels[2].value) return "1급";
+    if (count >= pushupLevels[1].value) return "2급";
+    if (count >= pushupLevels[0].value) return "3급";
+    return "불합격";
+  };
+
   const tileContent = ({ date, view }) => {
     if (view === "month") {
-      const formattedDate = date.toLocaleDateString("ko-KR", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      }).replace(/\./g, "-").trim();
-
+      const formattedDate = date.toISOString().split("T")[0];
       const hasRecord = exerciseData.some((record) => record.date === formattedDate);
 
       if (hasRecord) {
@@ -237,6 +230,26 @@ function DailyRecordPage() {
     return null;
   };
 
+  const tileDisabled = ({ date, view }) => {
+    if (view === "month") {
+      const currentMonth = new Date().getMonth();
+      return date.getMonth() !== currentMonth;
+    }
+    return false;
+  };
+
+  const renderLineChart = () => (
+    <ResponsiveContainer width="100%" height={200}>
+      <LineChart data={paceData}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="구간" interval={0} tick={{ fontSize: 10 }} />
+        <YAxis domain={[0, 20]} />
+        <Tooltip />
+        <Line type="monotone" dataKey="속도" stroke="#82ca9d" dot={false} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+
   return (
     <div style={styles.container}>
       <header style={styles.header}>
@@ -249,6 +262,8 @@ function DailyRecordPage() {
             onChange={setDate}
             value={date}
             tileContent={tileContent} // 점 표시 추가
+            tileDisabled={tileDisabled} // 현재 월 외의 날짜 비활성화
+            showNeighboringMonth={false} // 인접 월 숨김
           />
         </div>
 
@@ -260,17 +275,22 @@ function DailyRecordPage() {
               <h3 style={styles.sectionTitle}>선택한 날짜의 운동 기록</h3>
               <p>날짜: {selectedRecord.date}</p>
               <p>횟수: {selectedRecord.quantity}</p>
+              <p>등급: {calculateGrade(selectedRecord.quantity)}</p>
             </>
           ) : (
             <p>해당 날짜의 운동 기록이 없습니다.</p>
           )}
         </div>
+
+        <div style={styles.chartSection}>
+          <h3 style={styles.sectionTitle}>페이스</h3>
+          <span style={styles.description}>구간 별로 회원님의 운동 속도를 측정했어요</span>
+          <div style={styles.chartContainer}>{renderLineChart()}</div>
+        </div>
       </div>
     </div>
   );
 }
-
-
 
 // 기본 App 컴포넌트
 function App() {
