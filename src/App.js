@@ -160,6 +160,13 @@ function DailyRecordPage() {
 
   const userid = cookies.user_id;
 
+  const addNineHours = (utcDate) => {
+    const date = new Date(utcDate);
+    return new Date(date.getTime() + 9 * 60 * 60 * 1000) // 9시간 추가
+      .toISOString()
+      .split("T")[0]; // "YYYY-MM-DD" 형식으로 반환
+  };
+
   useEffect(() => {
     const fetchExerciseData = async () => {
       if (!userid) {
@@ -175,7 +182,7 @@ function DailyRecordPage() {
 
         const pushupStats = response.data.data.pushupStats.map((item) => ({
           ...item,
-          date: new Date(item.date).toISOString().split("T")[0], // 날짜 형식 변환
+          date: addNineHours(item.date), // 9시간 추가
         }));
 
         setExerciseData(pushupStats);
@@ -191,7 +198,7 @@ function DailyRecordPage() {
 
   useEffect(() => {
     if (date) {
-      const formattedDate = date.toISOString().split("T")[0];
+      const formattedDate = addNineHours(date.toISOString());
       const record = exerciseData.find((item) => item.date === formattedDate);
       setSelectedRecord(record || null);
     }
