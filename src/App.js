@@ -208,6 +208,18 @@ function DailyRecordPage() {
     return null;
   };
 
+  const renderLineChart = () => (
+    <ResponsiveContainer width="100%" height={200}>
+      <LineChart data={paceData}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="구간" interval={0} tick={{ fontSize: 10 }} /> {/* 글자 크기 조정 */}
+        <YAxis domain={[0, 20]} />
+        <Tooltip />
+        <Line type="monotone" dataKey="속도" stroke="#82ca9d" dot={false} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+
   const tileDisabled = ({ date, view }) => {
     if (view === "month") {
       const currentMonth = new Date().getMonth();
