@@ -202,7 +202,20 @@ function DailyRecordPage() {
 
       // 운동 데이터가 있는 날짜에 점 표시
       if (hasRecord) {
-        return <div style={{ color: "#3498db", fontSize: "16px", textAlign: "center" }}>•</div>;
+        return (
+          <div
+            style={{
+              position: "absolute", // 위치를 절대값으로 설정
+              bottom: "10%",       // 점이 날짜 아래 정렬되도록 조정
+              left: "50%",         // 수평 중앙 정렬
+              transform: "translateX(-50%)", // 수평 이동 보정
+              color: "#3498db",    // 점 색상
+              fontSize: "16px",    // 점 크기
+            }}
+          >
+            •
+          </div>
+        );
       }
     }
     return null;
