@@ -154,7 +154,7 @@ function MainPage() {
 function DailyRecordPage() {
   const [cookies] = useCookies(["access_token", "user_id", "user_name"]);
   const [date, setDate] = useState(new Date());
-  const [exerciseData, setExerciseData] = useState(null);
+  const [selectedRecord, setSelectedRecord] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
   const userid = cookies.user_id;
@@ -181,31 +181,28 @@ function DailyRecordPage() {
           },
         });
 
-        // 서버에서 받은 운동 데이터 저장
+        // 서버에서 받은 데이터 확인
         const pushupStats = response.data.data.pushupStats;
-        setExerciseData(pushupStats);
-        setErrorMessage("");
+
+        // 캘린더에서 선택된 날짜와 매칭되는 데이터 찾기
+        // 선택된 날짜를 9시간 추가한 후, "YYYY-MM-DD" 형식으로 변환
+        const adjustedDate = new Date(date.getTime() + 9 * 60 * 60 * 1000); // 9시간(9 * 60 * 60 * 1000) 추가
+        const formattedDate = adjustedDate.toISOString().split("T")[0];
+        console.log("선택한 날짜:", formattedDate);
+        console.log("서버 응답 데이터:", pushupStats);
+
+        const record = pushupStats.find((item) => item.date === formattedDate);
+        setSelectedRecord(record || null); // 데이터 없으면 null로 설정
+        setErrorMessage(""); // 오류 메시지 초기화
       } catch (error) {
         console.error("서버 통신 오류:", error);
         setErrorMessage("데이터를 가져오는 데 실패했습니다. 다시 시도해주세요.");
+        setSelectedRecord(null); // 오류 시 선택된 기록 초기화
       }
     };
 
     fetchExerciseData();
-  }, [userid, cookies.access_token]);
-
-  const tileContent = ({ date, view }) => {
-    if (view === "month") {
-      const formattedDate = date.toISOString().split("T")[0];
-      const hasRecord = exerciseData.some((record) => record.date === formattedDate);
-
-      // 운동 데이터가 있는 날짜에 점 표시
-      if (hasRecord) {
-        return <div style={{ color: "blue", fontSize: "10px", textAlign: "center" }}>•</div>;
-      }
-    }
-    return null;
-  };
+  }, [date, userid, cookies.access_token]); // date 변경 시 API 다시 호출
 
   const renderLineChart = () => (
     <ResponsiveContainer width="100%" height={200}>
@@ -238,7 +235,6 @@ function DailyRecordPage() {
           <Calendar
             onChange={setDate} // 캘린더에서 날짜 선택 시 업데이트
             value={date}
-            tileContent={tileContent} // 점 표시 설정
             tileDisabled={tileDisabled} // 현재 월 외의 날짜 비활성화
             showNeighboringMonth={false} // 인접 월 숨김
           />
@@ -247,18 +243,13 @@ function DailyRecordPage() {
         <div style={styles.recordSection}>
           {errorMessage ? (
             <p>{errorMessage}</p>
-          ) : exerciseData.length > 0 ? (
+          ) : selectedRecord ? (
             <>
               <h3 style={styles.sectionTitle}>선택한 날짜의 운동 기록</h3>
-              {exerciseData.map((record, index) => (
-                record.date === date.toISOString().split("T")[0] ? (
-                  <div key={index}>
-                    <p>날짜: {record.date}</p>
-                    <p>횟수: {record.quantity}</p>
-                    <p>등급: {calculateGrade(record.quantity)}</p>
-                  </div>
-                ) : null
-              ))}
+              <p>날짜: {new Date(new Date(selectedRecord.date).setDate(new Date(selectedRecord.date).getDate())).toISOString().split("T")[0]}</p>
+              <p>횟수: {selectedRecord.quantity}</p>
+              <p>등급: {calculateGrade(selectedRecord.quantity)}</p>
+              <p>평균 페이스: {selectedRecord.pace || "정보 없음"}</p>
             </>
           ) : (
             <p>해당 날짜의 운동 기록이 없습니다.</p>
