@@ -27,8 +27,8 @@ function MainPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(true); // 로딩 상태 추가
 
-  const userid = cookies.user_id;
-  //const userid = 8; // 하드코딩된 사용자 ID
+  const userid = cookies.user_id; //============================================
+  //const userid = 8; // 하드코딩된 사용자 ID ======================================
 
   useEffect(() => {
     const fetchStatistics = async () => {
@@ -39,8 +39,8 @@ function MainPage() {
       try {
         const response = await axios.get(`${BASE_URL}/api/statistics/weekly-stats/${userid}`, {
           headers: {
-            Authorization: `Bearer ${cookies.access_token}`,
-            //Authorization: `Bearer ${TEST_TOKEN}`,
+            Authorization: `Bearer ${cookies.access_token}`, //=========================
+            //Authorization: `Bearer ${TEST_TOKEN}`, //===============================
           },
         });
 
@@ -83,7 +83,7 @@ function MainPage() {
       { range: "0", values: [] },
       { range: "60", values: [] },
       { range: "90", values: [] },
-      { range: "120s", values: [] },
+      { range: "120", values: [] },
     ];
 
     // 데이터를 구간별로 분배
@@ -121,8 +121,8 @@ function MainPage() {
         `${BASE_URL}/api/statistics/daily-stats/${userid}/${formattedDate}`, // 경로에 userId와 date 포함
         {
           headers: {
-            Authorization: `Bearer ${cookies.access_token}`,
-            //Authorization: `Bearer ${TEST_TOKEN}`,
+            Authorization: `Bearer ${cookies.access_token}`, //========================
+            //Authorization: `Bearer ${TEST_TOKEN}`, //===============================
           },
         }
       );
@@ -162,15 +162,10 @@ function MainPage() {
   // 그래프 렌더링 코드 (구간 단순화 반영)
   const renderLineChart = () => (
     <ResponsiveContainer width="100%" height={250}>
-      <LineChart data={paceData}>
+      <LineChart data={paceData} margin={{ top: 10, right: 45, bottom: 10 }}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis
-          dataKey="time"
-
-          interval={0}
-
-          label={{ value: "시간 (초)", position: "insideBottom", offset: -1 }}
-        />
+        <XAxis dataKey="time" interval={0}
+          label={{ value: "시간 (초)", position: "insideBottom", offset: -3 }} />
         <YAxis allowDecimals={false} label={{ value: "속도 (개)", angle: -90, position: "insideLeft", offset: 20 }} />
         <Tooltip formatter={(value) => `${value} 개`} />
         <Line type="monotone" dataKey="속도" stroke="#82ca9d" dot />
@@ -193,7 +188,7 @@ function MainPage() {
   const renderBarChart = () => (
     <ResponsiveContainer width="100%" height={250}>
       <BarChart
-        data={data7Days}
+        data={data7Days} margin={{ right: 45, top: 10 }}
         onClick={(e) => handleBarClick(e?.activePayload?.[0]?.payload)} // 이벤트 수정
       >
         <CartesianGrid vertical={false} stroke="#444" />
@@ -265,8 +260,8 @@ function DailyRecordPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [paceErrorMessage, setPaceErrorMessage] = useState(""); // 페이스 데이터 에러 메시지
 
-  const userid = cookies.user_id;
-  //const userid = 8; // 하드코딩된 사용자 ID
+  const userid = cookies.user_id; //===============================================
+  //const userid = 8; // 하드코딩된 사용자 ID=========================================
 
   const addNineHours = (utcDate) => {
     const date = new Date(utcDate);
@@ -284,8 +279,8 @@ function DailyRecordPage() {
       try {
         const response = await axios.get(`${BASE_URL}/api/statistics/weekly-stats/${userid}`, {
           headers: {
-            Authorization: `Bearer ${cookies.access_token}`,
-            //Authorization: `Bearer ${TEST_TOKEN}`,
+            Authorization: `Bearer ${cookies.access_token}`,//==========================
+            //Authorization: `Bearer ${TEST_TOKEN}`, //==================================
           },
         });
 
@@ -343,13 +338,12 @@ function DailyRecordPage() {
     }
   };
 
-  // 30초 구간별 푸시업 완료 개수를 계산
   const calculatePushupsPerInterval = (timePoints) => {
     const intervals = [0, 30, 60, 90, 120];
     const result = intervals.map((start, index) => {
       const end = intervals[index + 1] || 120; // 마지막 구간은 120까지
-      const pushupsInInterval = timePoints.filter((time) => time >= start && time < end).length; // 구간별 데이터
-      return { 구간: `${start}`, 속도: pushupsInInterval };
+      const pushupsInInterval = timePoints.filter((time) => time >= start && time < end).length; // 범위를 수정
+      return { time: start, 속도: pushupsInInterval }; // `time`을 시작점으로 설정
     });
 
     return result;
@@ -398,12 +392,13 @@ function DailyRecordPage() {
 
   const renderLineChart = () => (
     <ResponsiveContainer width="100%" height={250}>
-      <LineChart data={paceData}>
+      <LineChart data={paceData} margin={{ top: 10, right: 45, bottom: 10 }}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="구간" interval={0} tick={{ fontSize: 10 }} />
-        <YAxis domain={[0, 20]} />
-        <Tooltip />
-        <Line type="monotone" dataKey="속도" stroke="#82ca9d" dot={false} />
+        <XAxis dataKey="time" interval={0}
+          label={{ value: "시간 (초)", position: "insideBottom", offset: -3 }} />
+        <YAxis allowDecimals={false} label={{ value: "속도 (개)", angle: -90, position: "insideLeft", offset: 20 }} />
+        <Tooltip formatter={(value) => `${value} 개`} />
+        <Line type="monotone" dataKey="속도" stroke="#82ca9d" dot />
       </LineChart>
     </ResponsiveContainer>
   );
