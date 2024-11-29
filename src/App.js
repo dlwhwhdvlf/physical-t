@@ -162,7 +162,7 @@ function MainPage() {
   // 그래프 렌더링 코드 (구간 단순화 반영)
   const renderLineChart = () => (
     <ResponsiveContainer width="100%" height={250}>
-      <LineChart data={paceData} margin={{ top: 10, right: 45, bottom: 10 }}>
+      <LineChart data={paceData} margin={{ right: 20, bottom: 10 }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="time" interval={0}
           label={{ value: "시간 (초)", position: "insideBottom", offset: -3 }} />
@@ -188,7 +188,7 @@ function MainPage() {
   const renderBarChart = () => (
     <ResponsiveContainer width="100%" height={250}>
       <BarChart
-        data={data7Days} margin={{ right: 45, top: 10 }}
+        data={data7Days}
         onClick={(e) => handleBarClick(e?.activePayload?.[0]?.payload)} // 이벤트 수정
       >
         <CartesianGrid vertical={false} stroke="#444" />
@@ -392,7 +392,7 @@ function DailyRecordPage() {
 
   const renderLineChart = () => (
     <ResponsiveContainer width="100%" height={250}>
-      <LineChart data={paceData} margin={{ top: 10, right: 45, bottom: 10 }}>
+      <LineChart data={paceData} margin={{ right: 20, bottom: 10 }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="time" interval={0}
           label={{ value: "시간 (초)", position: "insideBottom", offset: -3 }} />
