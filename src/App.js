@@ -415,7 +415,7 @@ function DailyRecordPage() {
             onChange={setDate}
             value={date}
             tileContent={tileContent}
-            tileDisabled={tileDisabled}
+            //tileDisabled={tileDisabled} 전 월 숨김처리로 클릭 금지
             showNeighboringMonth={false}
           />
         </div>
