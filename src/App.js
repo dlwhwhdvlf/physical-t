@@ -162,17 +162,31 @@ function MainPage() {
   // 그래프 렌더링 코드 (구간 단순화 반영)
   const renderLineChart = () => (
     <ResponsiveContainer width="100%" height={250}>
-      <LineChart data={paceData} margin={{ right: 20, bottom: 10 }}>
+      <LineChart data={paceData} margin={{ top: 10, right: 20, bottom: 30, left: 10 }}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="time" interval={0}
-          label={{ value: "시간 (초)", position: "insideBottom", offset: -3 }} />
+        <XAxis
+          dataKey="time"
+          interval={0}
+          tick={{ fontSize: 10 }}
+          label={{
+            value: "시간 (초)",
+            position: "insideBottom",
+            offset: -10,
+          }}
+        />
         <YAxis allowDecimals={false} label={{ value: "속도 (개)", angle: -90, position: "insideLeft", offset: 20 }} />
-        <Tooltip formatter={(value) => `${value} 개`} />
-        <Line type="monotone" dataKey="속도" stroke="#82ca9d" dot />
+        <Tooltip
+          formatter={(value) => `${value} 개`}
+        />
+        <Line
+          type="monotone"
+          dataKey="속도"
+          stroke="#82ca9d"
+          dot
+        />
       </LineChart>
     </ResponsiveContainer>
   );
-
 
   const handleBarClick = (data) => {
     if (data && data.date) {
@@ -192,7 +206,16 @@ function MainPage() {
         onClick={(e) => handleBarClick(e?.activePayload?.[0]?.payload)} // 이벤트 수정
       >
         <CartesianGrid vertical={false} stroke="#444" />
-        <XAxis dataKey="date" stroke="#888" tick={{ fontSize: 6 }} interval={0} />
+        <XAxis
+          dataKey="date"
+          tickFormatter={(date) => {
+            const [year, month, day] = date.split("-"); // YYYY-MM-DD 포맷을 분리
+            return `${month}-${day}`; // MM-DD 형식으로 반환
+          }}
+          stroke="#888"
+          tick={{ fontSize: 10 }} // 적절한 폰트 크기
+          interval={0} // 모든 날짜 표시
+        />
         <YAxis
           domain={[40, 80]} // 고정된 Y축 범위 설정
           ticks={[pushupLevels[0].value, pushupLevels[1].value, pushupLevels[2].value, pushupLevels[3].value]}
