@@ -137,7 +137,7 @@ const styles = {
   },
 };
 
-// -------------------- (1) 메인 통계 페이지(탭) --------------------
+// -------------------- 메인 통계 페이지(탭) --------------------
 function StatisticsPage() {
   const [activeTab, setActiveTab] = useState("pushup");
   const [cookies] = useCookies(["user_name"]);
@@ -187,7 +187,7 @@ function StatisticsPage() {
   );
 }
 
-// -------------------- (2) 푸시업 통계 탭 --------------------
+// -------------------- 푸시업 통계 탭 --------------------
 function PushupStatistics() {
   const [cookies, setCookie] = useCookies(["access_token", "user_id", "user_name"]);
   const [data7Days, setData7Days] = useState([]); // [{ date, 횟수 }, ...]
@@ -196,8 +196,8 @@ function PushupStatistics() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(true);
 
-  //const userid = cookies.user_id;
-  const userid = cookies.user_id || 8;
+  const userid = cookies.user_id;
+  //const userid = cookies.user_id || 8;
 
   // -------------------- A) 주간(7일) 통계 -> weekly-stats --------------------
   useEffect(() => {
@@ -211,8 +211,8 @@ function PushupStatistics() {
           `${BASE_URL}/api/statistics/weekly-stats/${userid}`,
           {
             headers: {
-              //Authorization: `Bearer ${cookies.access_token}`
-              Authorization: `Bearer ${TEST_TOKEN}`
+              Authorization: `Bearer ${cookies.access_token}`
+              //Authorization: `Bearer ${TEST_TOKEN}`
             },
           }
         );
@@ -273,8 +273,8 @@ function PushupStatistics() {
         `${BASE_URL}/api/statistics/daily-stats/${userid}/${dateStr}`,
         {
           headers: {
-            //Authorization: `Bearer ${cookies.access_token}`
-            Authorization: `Bearer ${TEST_TOKEN}`
+            Authorization: `Bearer ${cookies.access_token}`
+            //Authorization: `Bearer ${TEST_TOKEN}`
           }
         }
       );
@@ -417,7 +417,7 @@ function PushupStatistics() {
   );
 }
 
-// -------------------- (3) 달리기 통계 탭 --------------------
+// -------------------- 달리기 통계 탭 --------------------
 function RunningStatistics() {
   const [cookies, setCookie] = useCookies(["access_token", "user_id", "user_name"]);
   const [weeklyData, setWeeklyData] = useState([]); // [{ date, time }, ...] (time=null => no data)
@@ -425,8 +425,8 @@ function RunningStatistics() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
-  //const userid = cookies.user_id;
-  const userid = cookies.user_id || 8;
+  const userid = cookies.user_id;
+  //const userid = cookies.user_id || 8;
 
   // -------------------- 1) 주간 러닝 (7일) -> daily-stats 호출 -> time=3km 누적 --------------------
   useEffect(() => {
@@ -468,8 +468,8 @@ function RunningStatistics() {
         `${BASE_URL}/api/statistics/daily-stats/${userid}/${dateStr}`,
         {
           headers: {
-            //Authorization: `Bearer ${cookies.access_token}`
-            Authorization: `Bearer ${TEST_TOKEN}`
+            Authorization: `Bearer ${cookies.access_token}`
+            //Authorization: `Bearer ${TEST_TOKEN}`
           }
         }
       );
@@ -505,8 +505,8 @@ function RunningStatistics() {
         `${BASE_URL}/api/statistics/daily-stats/${userid}/${dateStr}`,
         {
           headers: {
-            //Authorization: `Bearer ${cookies.access_token}`
-            Authorization: `Bearer ${TEST_TOKEN}`
+            Authorization: `Bearer ${cookies.access_token}`
+            //Authorization: `Bearer ${TEST_TOKEN}`
           }
         }
       );
@@ -671,7 +671,7 @@ function RunningStatistics() {
   );
 }
 
-// -------------------- (4) 윗몸일으키기 통계 탭 --------------------
+// -------------------- 윗몸일으키기 통계 탭 --------------------
 function SitupStatistics() {
   return (
     <div style={{ padding: "10px" }}>
@@ -680,14 +680,14 @@ function SitupStatistics() {
   );
 }
 
-// -------------------- (5) 날짜별 운동 기록 페이지 --------------------
+// -------------------- 날짜별 운동 기록 페이지 --------------------
 function DailyRecordPage() {
   const [cookies] = useCookies(["access_token", "user_id", "user_name"]);
   const [date, setDate] = useState(new Date());
 
   // 푸시업/러닝 주간 데이터를 각각 저장
-  const [pushupData, setPushupData] = useState([]);   // [{ date: "YYYY-MM-DD", quantity: ... }, ...]
-  const [runningData, setRunningData] = useState([]); // [{ date: "YYYY-MM-DD", time: ... }, ...]
+  const [pushupData, setPushupData] = useState([]);
+  const [runningData, setRunningData] = useState([]);
 
   // 선택한 날짜의 푸시업/러닝 기록
   const [selectedPushup, setSelectedPushup] = useState(null);
@@ -695,7 +695,8 @@ function DailyRecordPage() {
 
   const [errorMessage, setErrorMessage] = useState("");
 
-  const userid = cookies.user_id || 8;
+  const userid = cookies.user_id;
+  //const userid = cookies.user_id || 8;
 
   // 로컬 Date → "YYYY-MM-DD"
   function formatLocalDate(dateObj) {
@@ -717,7 +718,8 @@ function DailyRecordPage() {
           `${BASE_URL}/api/statistics/weekly-stats/${userid}`,
           {
             headers: {
-              Authorization: `Bearer ${TEST_TOKEN}`,
+              Authorization: `Bearer ${cookies.access_token}`
+              //Authorization: `Bearer ${TEST_TOKEN}`,
             },
           }
         );
@@ -820,7 +822,7 @@ function DailyRecordPage() {
     return "불합격";
   }
   function calculateRunningGrade(time) {
-    // time(초)이 특급(750) 이하인지, etc.
+    // time(초)이 특급(750) 이하인지,
     if (time <= runningLevels[0].value) return "특급";
     if (time <= runningLevels[1].value) return "1급";
     if (time <= runningLevels[2].value) return "2급";
@@ -884,7 +886,7 @@ function DailyRecordPage() {
   );
 }
 
-// -------------------- (6) App: 라우팅 --------------------
+// -------------------- 라우팅 --------------------
 function App() {
   return (
     <Router>
