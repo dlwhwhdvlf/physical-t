@@ -901,8 +901,8 @@ function OldVersionApp() {
 function NewVersionApp() {
   return (
     <Routes>
-      <Route path="/" element={<StatisticsPage />} />
-      <Route path="/daily-record" element={<DailyRecordPage />} />
+      <Route path="/v1" element={<StatisticsPage />} />
+      <Route path="/v1/daily-record" element={<DailyRecordPage />} />
     </Routes>
   );
 }
