@@ -887,12 +887,35 @@ function DailyRecordPage() {
 }
 
 // -------------------- 라우팅 --------------------
+// 구버전 앱 컴포넌트 (예: 구버전은 기존 코드 그대로)
+function OldVersionApp() {
+  return (
+    <Routes>
+      <Route path="/" element={<StatisticsPage />} />
+      <Route path="/daily-record" element={<DailyRecordPage />} />
+    </Routes>
+  );
+}
+
+// 신버전 앱 컴포넌트 (원하는 대로 수정 가능, 여기서는 예시로 구버전과 동일하게 처리)
+function NewVersionApp() {
+  return (
+    <Routes>
+      <Route path="/" element={<StatisticsPage />} />
+      <Route path="/daily-record" element={<DailyRecordPage />} />
+    </Routes>
+  );
+}
+
+// 메인 App 컴포넌트에서 경로를 분리하여 배포합니다.
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<StatisticsPage />} />
-        <Route path="/daily-record" element={<DailyRecordPage />} />
+        {/* 구버전: 기존 URL 그대로 */}
+        <Route path="/*" element={<OldVersionApp />} />
+        {/* 신버전: /v1 하위 경로 */}
+        <Route path="/v1/*" element={<NewVersionApp />} />
       </Routes>
     </Router>
   );
