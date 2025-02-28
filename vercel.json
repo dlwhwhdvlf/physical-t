@@ -1,8 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/v1/:path*", // 브라우저에서 /v1/ 뒤에 어떤 path가 오든
-      "destination": "/:path*" // 실제로는 / (루트)로 보내겠다
+      "source": "/v1/:path*",
+      "destination": "/:path*"
     }
   ]
 }
