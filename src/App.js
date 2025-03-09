@@ -426,21 +426,18 @@ function RunningStatistics() {
   const [errorMessage, setErrorMessage] = useState("");
 
   const userid = cookies.user_id;
-  //const userid = cookies.user_id || 8;
 
-  // -------------------- 1) 주간 러닝 (7일) -> daily-stats 호출 -> time=3km 누적 --------------------
   useEffect(() => {
     if (!userid) {
       setErrorMessage("사용자 ID가 설정되지 않았습니다.");
       return;
     }
-    // 최근 7일 날짜
     const today = new Date();
     today.setHours(today.getHours() + 9);
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date(today);
       d.setDate(today.getDate() - (6 - i));
-      return d.toISOString().split("T")[0]; // YYYY-MM-DD
+      return d.toISOString().split("T")[0];
     });
 
     fetchWeeklyFromDaily(last7Days);
@@ -451,7 +448,7 @@ function RunningStatistics() {
       const results = [];
       for (const dateStr of dateArray) {
         const dayResult = await fetchDailyLastValue(dateStr);
-        results.push(dayResult); // { date, time } (null if no data)
+        results.push(dayResult); // { date, time }
       }
       setWeeklyData(results);
       setErrorMessage("");
@@ -461,25 +458,24 @@ function RunningStatistics() {
     }
   }
 
-  // 특정 날짜의 일일 데이터 → runningTempo[29] = 3km 누적
+  // DB에는 100m 구간별 '개별 시간'이 들어있으므로, 합산해서 3km 시간 계산
   async function fetchDailyLastValue(dateStr) {
     try {
       const response = await axios.get(
         `${BASE_URL}/api/statistics/daily-stats/${userid}/${dateStr}`,
         {
           headers: {
-            Authorization: `Bearer ${cookies.access_token}`
-            //Authorization: `Bearer ${TEST_TOKEN}`
-          }
+            Authorization: `Bearer ${cookies.access_token}`,
+          },
         }
       );
       const rawArray = response.data.data?.runningTempo;
       if (rawArray && rawArray.length === 30) {
-        const tempoArr = rawArray.map((val) => parseFloat(val));
-        const lastVal = tempoArr[29]; // 3km 누적
-        return { date: dateStr, time: lastVal };
+        // 30개 (각 100m별 소요 시간)
+        // 3km 전체 시간 = sum of all 30
+        const totalSec = rawArray.reduce((acc, cur) => acc + cur, 0);
+        return { date: dateStr, time: totalSec };
       } else {
-        // 기록 없음
         return { date: dateStr, time: null };
       }
     } catch (error) {
@@ -487,7 +483,6 @@ function RunningStatistics() {
     }
   }
 
-  // -------------------- 2) 주간 그래프 클릭 -> 일일(1/2/3km) --------------------
   const handleWeekClick = (data) => {
     if (!data || !data.date || data.time === null) {
       setSelectedDate(data?.date || null);
@@ -505,15 +500,14 @@ function RunningStatistics() {
         `${BASE_URL}/api/statistics/daily-stats/${userid}/${dateStr}`,
         {
           headers: {
-            Authorization: `Bearer ${cookies.access_token}`
-            //Authorization: `Bearer ${TEST_TOKEN}`
-          }
+            Authorization: `Bearer ${cookies.access_token}`,
+          },
         }
       );
       const rawArray = response.data.data?.runningTempo;
       if (rawArray && rawArray.length === 30) {
-        const arr = rawArray.map((val) => parseFloat(val));
-        setSegmentData(makeThreeSegments(arr));
+        // ----- ★ 수정: 구간별 시간(각 100m)에 대해 10개씩 합산 → 1km
+        setSegmentData(makeThreeSegments(rawArray));
         setErrorMessage("");
       } else {
         setSegmentData([]);
@@ -526,17 +520,25 @@ function RunningStatistics() {
     }
   }
 
-  // 인덱스 9,19,29 => 1/2/3km
+  // ----- ★ 여기서 개별시간(100m 단위)을 합산
   function makeThreeSegments(arr) {
+    // arr: 길이 30, 각 원소가 "100m 달리는 데 걸린 시간(초)"
+    // 1km = arr[0..9] 합산, 2km = arr[10..19], 3km = arr[20..29]
     const segments = [];
-    for (let i = 1; i <= 3; i++) {
-      const idx = i * 10 - 1; // 9,19,29
-      const valSec = arr[idx];
-      segments.push({ km: i, pace: convertSecondsToPace(valSec) });
+    for (let i = 0; i < 3; i++) {
+      let sumSec = 0;
+      for (let j = i * 10; j < i * 10 + 10; j++) {
+        sumSec += arr[j];
+      }
+      segments.push({
+        km: i + 1,
+        pace: convertSecondsToPace(sumSec),
+      });
     }
     return segments;
   }
 
+  // 초 → "m'ss.s''" 형태
   function convertSecondsToPace(sec) {
     if (sec == null) return "No data";
     const m = Math.floor(sec / 60);
@@ -547,8 +549,6 @@ function RunningStatistics() {
     return `${m}'${sDecimal}''`;
   }
 
-  // -------------------- 3) 그래프 도메인 & 툴팁 포맷 --------------------
-  // domain=[700, 980] => 특급(750)~3급(936)보다 조금 넓게
   function formatSecondsOrNoData(val) {
     if (val == null) return "";
     const mm = Math.floor(val / 60);
@@ -563,7 +563,6 @@ function RunningStatistics() {
     return `${mm}:${ss < 10 ? "0" : ""}${ss}`;
   }
 
-  // 주간 데이터 중 하나라도 time != null이면 그래프 표시
   const hasAnyData = weeklyData.some((d) => d.time !== null);
 
   return (
@@ -582,30 +581,20 @@ function RunningStatistics() {
                   : null
               }
             >
-              {/*
-                vertical={false} => 세로선 안 그림
-                horizontal => 기본 true => 가로선 그림
-                stroke="#444" => 회색 실선
-              */}
               <CartesianGrid vertical={false} stroke="#444" />
-
               <XAxis
                 dataKey="date"
                 tickFormatter={(dateStr) => dateStr.substring(5)}
                 stroke="#888"
                 tick={{ fontSize: 10 }}
               />
-
               <YAxis
                 domain={[700, 980]}
                 tick={false}
                 axisLine={false}
                 tickLine={false}
               />
-
               <Tooltip formatter={tooltipFormatter} />
-
-              {/* 달리기 등급 기준선 (특급,1급,2급,3급) */}
               {runningLevels.map((line, idx) => (
                 <ReferenceLine
                   key={idx}
@@ -615,7 +604,6 @@ function RunningStatistics() {
                   strokeDasharray="3 3"
                 />
               ))}
-
               <Line
                 type="monotone"
                 dataKey="time"
@@ -628,7 +616,6 @@ function RunningStatistics() {
         )}
       </div>
 
-      {/* 1/2/3km 테이블 */}
       <div style={styles.chartSection}>
         <h3 style={styles.sectionTitle}>
           {selectedDate ? `${selectedDate} 러닝 구간` : "주간 기록을 클릭하세요"}
