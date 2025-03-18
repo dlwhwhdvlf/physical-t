@@ -668,37 +668,23 @@ function SitupStatistics() {
 }
 
 // -------------------- 날짜별 운동 기록 페이지 --------------------
-// -------------------- 날짜별 운동 기록 페이지 --------------------
 function DailyRecordPage() {
   const [cookies] = useCookies(["access_token", "user_id", "user_name"]);
   const [date, setDate] = useState(new Date());
 
-  // 푸시업/러닝 주간 데이터를 각각 저장
+  // 푸시업/러닝 주간 데이터를 저장 (달력 점 표시에 사용)
   const [pushupData, setPushupData] = useState([]);
   const [runningData, setRunningData] = useState([]);
 
-  // 선택한 날짜의 푸시업/러닝 기록
+  // 선택한 날짜의 푸시업 및 러닝 기록 (자세한 기록용)
   const [selectedPushup, setSelectedPushup] = useState(null);
   const [selectedRunning, setSelectedRunning] = useState(null);
 
   const [errorMessage, setErrorMessage] = useState("");
 
   const userid = cookies.user_id;
-  // const userid = cookies.user_id || 8;
 
-  // ─────────────────────────────────────────────
-  // [추가] 러닝 시간을 "분:초" 형태로 보여줄 함수
-  // 소수점 문제를 방지하기 위해 Math.round()로 반올림
-  // ─────────────────────────────────────────────
-  function formatRunningTime(sec) {
-    if (!sec || sec <= 0) return "0:00"; // 기록이 0 이하이면 "0:00"
-    const rounded = Math.round(sec);     // 소수점 반올림
-    const m = Math.floor(rounded / 60);
-    const s = rounded % 60;
-    return `${m}:${s < 10 ? "0" : ""}${s}`;
-  }
-
-  // 날짜 객체 → "YYYY-MM-DD"
+  // 로컬 Date → "YYYY-MM-DD"
   function formatLocalDate(dateObj) {
     const year = dateObj.getFullYear();
     const month = String(dateObj.getMonth() + 1).padStart(2, "0");
@@ -706,7 +692,16 @@ function DailyRecordPage() {
     return `${year}-${month}-${day}`;
   }
 
-  // (A) 주간 푸시업+러닝 데이터 가져오기 (weekly-stats)
+  // 러닝 시간을 "분:초" 형태로 변환 (소수점 문제 해결 위해 Math.round 사용)
+  function formatRunningTime(sec) {
+    if (!sec || sec <= 0) return "0:00";
+    const rounded = Math.round(sec);
+    const m = Math.floor(rounded / 60);
+    const s = rounded % 60;
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
+  }
+
+  // (A) 주간 푸시업+러닝 데이터 가져오기 (weekly-stats API)
   useEffect(() => {
     const fetchWeeklyStats = async () => {
       if (!userid) {
@@ -719,22 +714,19 @@ function DailyRecordPage() {
           {
             headers: {
               Authorization: `Bearer ${cookies.access_token}`,
-              // Authorization: `Bearer ${TEST_TOKEN}`,
             },
           }
         );
 
-        // 서버 응답에서 pushupStats, runningStats 추출
         const { pushupStats, runningStats } = response.data.data;
 
-        // 날짜(YYYY-MM-DD)만 그대로 사용 (추가 9시간 X)
         const newPushupData = pushupStats.map((item) => ({
           date: item.date,
           quantity: item.quantity,
         }));
         const newRunningData = runningStats.map((item) => ({
           date: item.date,
-          time: item.time, // 3km 걸린 시간(초)
+          time: item.time, // 이 값은 달력 점 표시에만 사용 (자세한 러닝 기록은 daily-stats API로 가져옴)
         }));
 
         setPushupData(newPushupData);
@@ -749,48 +741,59 @@ function DailyRecordPage() {
     fetchWeeklyStats();
   }, [userid]);
 
-  // (B) 달력에서 날짜 선택 => 푸시업/러닝 기록 찾기
+  // (B) 달력에서 날짜 선택 시 → 푸시업은 weekly-stats API 데이터에서, 러닝은 daily-stats API 호출
   useEffect(() => {
     if (date) {
       const formattedDate = formatLocalDate(date);
 
-      // 푸시업 기록
+      // 푸시업 기록 (weekly API 사용)
       const pRecord = pushupData.find((item) => item.date === formattedDate);
       setSelectedPushup(pRecord || null);
 
-      // 러닝 기록
-      const rRecord = runningData.find((item) => item.date === formattedDate);
-      setSelectedRunning(rRecord || null);
+      // 러닝 기록: daily-stats API로 30개(100m) 합산
+      fetchDailyRunning(formattedDate);
     }
-  }, [date, pushupData, runningData]);
+  }, [date, pushupData]);
 
-  // (C) 달력 타일 표시 (푸시업: 파란 점, 러닝: 노란 점)
+  // (B-2) daily-stats API를 호출하여 러닝 기록(3km 전체 시간)을 계산
+  async function fetchDailyRunning(dateStr) {
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/api/statistics/daily-stats/${userid}/${dateStr}`,
+        { headers: { Authorization: `Bearer ${cookies.access_token}` } }
+      );
+      const rawArray = res.data?.data?.runningTempo;
+      if (rawArray && rawArray.length === 30) {
+        const totalSec = rawArray.reduce((acc, cur) => acc + cur, 0);
+        setSelectedRunning({ date: dateStr, time: totalSec });
+      } else {
+        setSelectedRunning(null);
+      }
+    } catch (err) {
+      console.error("일일 러닝 API 실패:", err);
+      setSelectedRunning(null);
+    }
+  }
+
+  // (C) 달력 타일 표시 (푸시업: 파란 점, 러닝: 노란 점, 둘 다 있으면 2개)
   const tileContent = ({ date: tileDate, view }) => {
     if (view === "month") {
       const localDate = formatLocalDate(tileDate);
       const hasPushup = pushupData.some((p) => p.date === localDate);
       const hasRunning = runningData.some((r) => r.date === localDate);
-
       if (!hasPushup && !hasRunning) return null;
 
       return (
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            width: "100%",
-            height: "100%",
-          }}
-        >
+        <div style={{ position: "relative" }}>
           {hasPushup && (
             <div
               style={{
                 position: "absolute",
-                top: "5%",
-                left: "5%",
+                bottom: "10%",
+                left: "30%",
+                transform: "translateX(-50%)",
                 color: "#3498db", // 파란색
-                fontSize: "12px",
+                fontSize: "16px",
               }}
             >
               •
@@ -800,10 +803,11 @@ function DailyRecordPage() {
             <div
               style={{
                 position: "absolute",
-                top: "5%",
-                right: "5%",
+                bottom: "10%",
+                left: "70%",
+                transform: "translateX(-50%)",
                 color: "yellow", // 노란색
-                fontSize: "12px",
+                fontSize: "16px",
               }}
             >
               •
@@ -815,7 +819,7 @@ function DailyRecordPage() {
     return null;
   };
 
-  // (D) 등급 계산
+  // (D) 등급 계산 함수
   function calculatePushupGrade(count) {
     if (count >= pushupLevels[0].value) return "특급";
     if (count >= pushupLevels[1].value) return "1급";
@@ -823,11 +827,11 @@ function DailyRecordPage() {
     if (count >= pushupLevels[3].value) return "3급";
     return "불합격";
   }
-  function calculateRunningGrade(time) {
-    if (time <= runningLevels[0].value) return "특급";
-    if (time <= runningLevels[1].value) return "1급";
-    if (time <= runningLevels[2].value) return "2급";
-    if (time <= runningLevels[3].value) return "3급";
+  function calculateRunningGrade(sec) {
+    if (sec <= runningLevels[0].value) return "특급";
+    if (sec <= runningLevels[1].value) return "1급";
+    if (sec <= runningLevels[2].value) return "2급";
+    if (sec <= runningLevels[3].value) return "3급";
     return "불합격";
   }
 
@@ -840,6 +844,7 @@ function DailyRecordPage() {
       </header>
 
       <div style={styles.content}>
+        {/* 달력 */}
         <div style={styles.calendarSection}>
           <Calendar
             onChange={setDate}
@@ -849,6 +854,7 @@ function DailyRecordPage() {
           />
         </div>
 
+        {/* 선택한 날짜 기록 (푸시업 + 러닝) */}
         <div style={styles.recordSection}>
           {errorMessage ? (
             <p>{errorMessage}</p>
@@ -871,8 +877,9 @@ function DailyRecordPage() {
               {/* 러닝 기록 */}
               {selectedRunning ? (
                 <>
-                  {/* 여기서 formatRunningTime() 사용 */}
-                  <p>러닝 시간(3km): {formatRunningTime(selectedRunning.time)}</p>
+                  <p>
+                    러닝 시간(3km): {formatRunningTime(selectedRunning.time)}
+                  </p>
                   <p>등급: {calculateRunningGrade(selectedRunning.time)}</p>
                 </>
               ) : (
