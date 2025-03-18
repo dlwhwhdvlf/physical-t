@@ -790,7 +790,6 @@ function DailyRecordPage() {
               color: "#3498db",
               fontSize: "14px",
               transform: "translateX(-50%)",
-              whiteSpace: "nowrap",
             }}
           >
             •
@@ -807,7 +806,6 @@ function DailyRecordPage() {
               color: "yellow",
               fontSize: "14px",
               transform: "translateX(-50%)",
-              whiteSpace: "nowrap",
             }}
           >
             •

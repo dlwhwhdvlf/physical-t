@@ -17,6 +17,7 @@
   color: #ffffff !important;
   position: relative;
   /* 자식 요소 절대 위치를 위해 부모를 상대 위치로 설정 */
+  text-align: center;
 }
 
 .react-calendar__tile--active {
