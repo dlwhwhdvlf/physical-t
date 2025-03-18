@@ -758,23 +758,19 @@ function DailyRecordPage() {
   const tileContent = ({ date: tileDate, view }) => {
     if (view === "month") {
       const localDate = formatLocalDate(tileDate);
-
       const hasPushup = pushupData.some((p) => p.date === localDate);
       const hasRunning = runningData.some((r) => r.date === localDate);
-
       if (!hasPushup && !hasRunning) return null;
-
       return (
-        <div style={{ position: "relative" }}>
+        <div style={{ position: "absolute", top: 0, right: 0, width: "100%", height: "100%" }}>
           {hasPushup && (
             <div
               style={{
                 position: "absolute",
-                bottom: "10%",
-                left: "30%",
-                transform: "translateX(-50%)",
+                top: "5%",
+                left: "5%",
                 color: "#3498db", // 파란색
-                fontSize: "16px",
+                fontSize: "12px",
               }}
             >
               •
@@ -784,11 +780,10 @@ function DailyRecordPage() {
             <div
               style={{
                 position: "absolute",
-                bottom: "10%",
-                left: "70%",
-                transform: "translateX(-50%)",
+                top: "5%",
+                right: "5%",
                 color: "yellow", // 노란색
-                fontSize: "16px",
+                fontSize: "12px",
               }}
             >
               •
