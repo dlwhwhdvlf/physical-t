@@ -785,10 +785,10 @@ function DailyRecordPage() {
           <div
             style={{
               position: "absolute",
-              top: "10%", // 혹은 bottom: "10%"
+              bottom: "10%", // 혹은 bottom: "10%"
               left: "30%",
               color: "#3498db",
-              fontSize: "16px",
+              fontSize: "14px",
               transform: "translate(-50%, 0)",
             }}
           >
@@ -801,10 +801,10 @@ function DailyRecordPage() {
           <div
             style={{
               position: "absolute",
-              top: "10%",
+              bottom: "10%",
               left: "70%",
               color: "yellow",
-              fontSize: "16px",
+              fontSize: "14px",
               transform: "translate(-50%, 0)",
             }}
           >
