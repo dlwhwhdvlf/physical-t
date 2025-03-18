@@ -779,37 +779,23 @@ function DailyRecordPage() {
     if (!hasPushup && !hasRunning) return null;
 
     return (
-      <div style={{ position: "relative", width: "100%", height: "100%" }}>
-        {/* 파란 점 (푸시업) */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "5px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {/* 푸시업 점 (파랑) */}
         {hasPushup && (
-          <div
-            style={{
-              position: "absolute",
-              bottom: "5%",
-              left: "40%",
-              color: "#3498db",
-              fontSize: "14px",
-              transform: "translateX(-50%)",
-            }}
-          >
-            •
-          </div>
+          <span style={{ color: "#3498db", marginRight: "6px" }}>•</span>
         )}
 
-        {/* 노란 점 (러닝) */}
+        {/* 러닝 점 (노랑) */}
         {hasRunning && (
-          <div
-            style={{
-              position: "absolute",
-              bottom: "5%",
-              left: "60%",
-              color: "yellow",
-              fontSize: "14px",
-              transform: "translateX(-50%)",
-            }}
-          >
-            •
-          </div>
+          <span style={{ color: "yellow" }}>•</span>
         )}
       </div>
     );
