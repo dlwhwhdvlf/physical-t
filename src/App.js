@@ -786,7 +786,7 @@ function DailyRecordPage() {
             style={{
               position: "absolute",
               bottom: "5%",
-              left: "30%",
+              left: "40%",
               color: "#3498db",
               fontSize: "10px",
               transform: "translate(-50%, 0)",
@@ -802,7 +802,7 @@ function DailyRecordPage() {
             style={{
               position: "absolute",
               bottom: "5%",
-              left: "70%",
+              left: "60%",
               color: "yellow",
               fontSize: "10px",
               transform: "translate(-50%, 0)",
