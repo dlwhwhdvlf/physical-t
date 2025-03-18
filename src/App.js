@@ -668,10 +668,160 @@ function SitupStatistics() {
 }
 
 // -------------------- 날짜별 운동 기록 페이지 --------------------
-// 실제로 일일 통계를 다시 불러와 합산한 러닝 시간/등급
-const [runningTime, setRunningTime] = useState(null);
-const [runningGrade, setRunningGrade] = useState(null);
+function DailyRecordPage() {
+  const [cookies] = useCookies(["access_token", "user_id", "user_name"]);
+  const [date, setDate] = useState(new Date());
 
+  // 해당 날짜의 푸시업·러닝 기록
+  const [pushupQuantity, setPushupQuantity] = useState(null);
+  const [runningTotalTime, setRunningTotalTime] = useState(null);
+
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const userid = cookies.user_id;
+
+  // 날짜 객체 → "YYYY-MM-DD" 변환
+  function formatLocalDate(dateObj) {
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+    const day = String(dateObj.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  // 달력에서 날짜 바뀔 때마다 일일 API 호출
+  useEffect(() => {
+    if (!userid) {
+      setErrorMessage("사용자 ID가 설정되지 않았습니다.");
+      return;
+    }
+    const selectedDateStr = formatLocalDate(date);
+    fetchDailyStats(selectedDateStr);
+  }, [date, userid]);
+
+  // (A) 일일 API로부터 푸시업·러닝 기록 가져오기
+  async function fetchDailyStats(dateStr) {
+    try {
+      setErrorMessage("");
+      setPushupQuantity(null);
+      setRunningTotalTime(null);
+
+      const response = await axios.get(
+        `${BASE_URL}/api/statistics/daily-stats/${userid}/${dateStr}`,
+        {
+          headers: {
+            Authorization: `Bearer ${cookies.access_token}`,
+          },
+        }
+      );
+
+      const data = response.data?.data;
+      if (!data) {
+        // 해당 날짜 데이터가 없으면 리셋
+        return;
+      }
+
+      // 1) 푸시업
+      //   백엔드에서 pushupQuantity, pushupTempo 등으로 내려줄 때
+      //   pushupQuantity 필드가 있으면 사용
+      if (data.pushupQuantity !== undefined) {
+        setPushupQuantity(data.pushupQuantity);
+      }
+
+      // 2) 러닝
+      //   runningTempo: [구간별 개별 시간], length=30이면 3km
+      if (Array.isArray(data.runningTempo) && data.runningTempo.length === 30) {
+        const totalSec = data.runningTempo.reduce((acc, cur) => acc + cur, 0);
+        setRunningTotalTime(totalSec);
+      }
+    } catch (err) {
+      console.error("일일 기록 불러오기 실패:", err);
+      setErrorMessage("해당 날짜의 데이터를 가져오지 못했습니다.");
+    }
+  }
+
+  // (B) 등급 계산 함수들
+  function calculatePushupGrade(count) {
+    if (count >= pushupLevels[0].value) return "특급";
+    if (count >= pushupLevels[1].value) return "1급";
+    if (count >= pushupLevels[2].value) return "2급";
+    if (count >= pushupLevels[3].value) return "3급";
+    return "불합격";
+  }
+
+  function calculateRunningGrade(timeSec) {
+    // timeSec가 750 이하 => 특급, ...
+    if (timeSec <= runningLevels[0].value) return "특급";
+    if (timeSec <= runningLevels[1].value) return "1급";
+    if (timeSec <= runningLevels[2].value) return "2급";
+    if (timeSec <= runningLevels[3].value) return "3급";
+    return "불합격";
+  }
+
+  // (C) 달력 타일 표시(푸시업/러닝 여부)
+  function tileContent({ date: tileDate, view }) {
+    if (view !== "month") return null;
+
+    // 날짜 문자열
+    const localDate = formatLocalDate(tileDate);
+
+    // 이 예시는 "weekly-stats"처럼 전체 날짜 목록을 저장하지 않았으므로
+    //   만약 주간 API 등에서 미리 pushupDates, runningDates 등을
+    //   한꺼번에 받아와서 비교한다면 여기서 점을 찍을 수 있음.
+    // 여기서는 간단히 "매번 daily-stats"를 안 부르므로,
+    //   실제로 점 표시가 어렵거나, 또는 별도 데이터가 필요합니다.
+    //   (예시: pushupDates.includes(localDate) ? 찍기 : 안 찍기)
+    return null;
+  }
+
+  // (D) 화면에 표시
+  return (
+    <div style={styles.container}>
+      <header style={styles.header}>
+        <h2 style={styles.title}>
+          {cookies.user_name ? `${cookies.user_name}님 캘린더` : "???님 캘린더"}
+        </h2>
+      </header>
+
+      <div style={styles.content}>
+        <div style={styles.calendarSection}>
+          <Calendar
+            onChange={setDate}
+            value={date}
+            tileContent={tileContent}
+            showNeighboringMonth={false}
+          />
+        </div>
+
+        <div style={styles.recordSection}>
+          <h3 style={styles.sectionTitle}>
+            선택한 날짜: {formatLocalDate(date)}
+          </h3>
+          {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+
+          {/* 푸시업 */}
+          {pushupQuantity !== null ? (
+            <>
+              <p>푸시업 횟수: {pushupQuantity}</p>
+              <p>등급: {calculatePushupGrade(pushupQuantity)}</p>
+            </>
+          ) : (
+            <p>푸시업 기록 없음</p>
+          )}
+
+          {/* 러닝 */}
+          {runningTotalTime !== null ? (
+            <>
+              <p>러닝 시간(3km): {runningTotalTime}초</p>
+              <p>등급: {calculateRunningGrade(runningTotalTime)}</p>
+            </>
+          ) : (
+            <p>러닝 기록 없음</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 // -------------------- 라우팅 --------------------
 // 구버전 앱 컴포넌트 (예: 구버전은 기존 코드 그대로)
 function OldVersionApp() {
